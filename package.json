@@ -9,13 +9,223 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onLanguage:markdown",
+    "workspaceContains:**/PRD.md",
+    "workspaceContains:**/prd.md"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "prd-manager.helloWorld",
-        "title": "Hello World"
+        "command": "prd-manager.toggleTask",
+        "title": "PRD: Toggle Task"
+      },
+      {
+        "command": "prd-manager.generateReport",
+        "title": "PRD: Generate Progress Report"
+      },
+      {
+        "command": "prd-manager.addTask",
+        "title": "PRD: Add New Task"
+      },
+      {
+        "command": "prd-manager.addTaskAtCursor",
+        "title": "PRD: Add Task Here"
+      },
+      {
+        "command": "prd-manager.addTaskToHeader",
+        "title": "PRD: Add Task to Header"
+      },
+      {
+        "command": "prd-manager.copyTaskList",
+        "title": "PRD: Copy Task List"
+      },
+      {
+        "command": "prd-manager.assignTask",
+        "title": "PRD: Assign Task"
+      },
+      {
+        "command": "prd-manager.copyDeepLink",
+        "title": "PRD: Copy Deep Link"
+      },
+      {
+        "command": "prd-manager.openPrdFile",
+        "title": "PRD: Open PRD File",
+        "icon": "$(file)"
+      },
+      {
+        "command": "prd-manager.refreshTasks",
+        "title": "PRD: Refresh Tasks",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "prd-manager.goToTask",
+        "title": "Go to Task",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "prd-manager.copyTaskId",
+        "title": "Copy Task ID"
+      },
+      {
+        "command": "prd-manager.copyTaskText",
+        "title": "Copy Task Text"
+      },
+      {
+        "command": "prd-manager.copyHeaderTasks",
+        "title": "Copy All Task IDs"
+      },
+      {
+        "command": "prd-manager.goToHeader",
+        "title": "Go to Header"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "prdExplorer",
+          "name": "PRD Tasks",
+          "icon": "$(checklist)",
+          "contextualTitle": "PRD Manager"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "prdExplorer",
+        "contents": "No PRD files found.\n[Open PRD File](command:prd-manager.openPrdFile)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "prd-manager.openPrdFile",
+          "when": "view == prdExplorer",
+          "group": "navigation@1"
+        },
+        {
+          "command": "prd-manager.refreshTasks",
+          "when": "view == prdExplorer",
+          "group": "navigation@2"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "prd-manager.goToTask",
+          "when": "view == prdExplorer && viewItem == prdTask",
+          "group": "navigation@1"
+        },
+        {
+          "command": "prd-manager.toggleTask",
+          "when": "view == prdExplorer && viewItem == prdTask",
+          "group": "1_modification@1"
+        },
+        {
+          "command": "prd-manager.assignTask",
+          "when": "view == prdExplorer && viewItem == prdTask",
+          "group": "1_modification@2"
+        },
+        {
+          "command": "prd-manager.copyTaskId",
+          "when": "view == prdExplorer && viewItem == prdTask",
+          "group": "2_copy@1"
+        },
+        {
+          "command": "prd-manager.copyTaskText",
+          "when": "view == prdExplorer && viewItem == prdTask",
+          "group": "2_copy@2"
+        },
+        {
+          "command": "prd-manager.copyDeepLink",
+          "when": "view == prdExplorer && viewItem == prdTask",
+          "group": "2_copy@3"
+        },
+        {
+          "command": "prd-manager.copyHeaderTasks",
+          "when": "view == prdExplorer && viewItem == prdHeader",
+          "group": "1_copy@1"
+        },
+        {
+          "command": "prd-manager.goToHeader",
+          "when": "view == prdExplorer && viewItem == prdHeader",
+          "group": "navigation@1"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "prd-manager.toggleTask",
+          "when": "resourceExtname == .md",
+          "group": "prd"
+        },
+        {
+          "command": "prd-manager.assignTask",
+          "when": "resourceExtname == .md",
+          "group": "prd"
+        },
+        {
+          "command": "prd-manager.copyDeepLink",
+          "when": "resourceExtname == .md",
+          "group": "prd"
+        },
+        {
+          "command": "prd-manager.addTaskAtCursor",
+          "when": "resourceExtname == .md",
+          "group": "prd"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "PRD Manager",
+      "properties": {
+        "prdManager.autoGenerateIds": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically generate task IDs"
+        },
+        "prdManager.idFormat": {
+          "type": "string",
+          "default": "PRD-{timestamp}",
+          "description": "Format for auto-generated IDs"
+        },
+        "prdManager.showCodeLens": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show inline task actions"
+        },
+        "prdManager.decorateAssignees": {
+          "type": "boolean",
+          "default": true,
+          "description": "Highlight @-mentions"
+        },
+        "prdManager.decorateDeepLinks": {
+          "type": "boolean",
+          "default": true,
+          "description": "Make task IDs clickable"
+        }
+      }
+    },
+    "languages": [
+      {
+        "id": "prd-markdown",
+        "aliases": [
+          "PRD Markdown",
+          "prd"
+        ],
+        "extensions": [
+          ".prd.md"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "prd-markdown",
+        "scopeName": "text.prd.markdown",
+        "path": "./syntaxes/prd.tmLanguage.json",
+        "embeddedLanguages": {
+          "meta.embedded.block.markdown": "markdown"
+        }
       }
     ]
   },

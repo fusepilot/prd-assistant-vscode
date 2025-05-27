@@ -1,0 +1,64 @@
+{
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+    "name": "PRD Markdown",
+    "patterns": [
+        {
+            "include": "#prd-task"
+        },
+        {
+            "include": "#prd-id"
+        },
+        {
+            "include": "#prd-assignee"
+        },
+        {
+            "include": "text.html.markdown"
+        }
+    ],
+    "repository": {
+        "prd-task": {
+            "name": "markup.list.prd-task",
+            "match": "^(\\s*)(-|\\*|\\d+\\.)\\s+(\\[[ x]\\])\\s+(.*)$",
+            "captures": {
+                "1": {
+                    "name": "punctuation.definition.list.begin.markdown"
+                },
+                "2": {
+                    "name": "punctuation.definition.list.begin.markdown"
+                },
+                "3": {
+                    "name": "markup.checkbox.prd",
+                    "patterns": [
+                        {
+                            "match": "\\[x\\]",
+                            "name": "markup.checkbox.checked.prd"
+                        },
+                        {
+                            "match": "\\[ \\]",
+                            "name": "markup.checkbox.unchecked.prd"
+                        }
+                    ]
+                },
+                "4": {
+                    "patterns": [
+                        {
+                            "include": "#prd-assignee"
+                        },
+                        {
+                            "include": "#prd-id"
+                        }
+                    ]
+                }
+            }
+        },
+        "prd-id": {
+            "name": "markup.underline.link.prd-id",
+            "match": "PRD-\\d{6}"
+        },
+        "prd-assignee": {
+            "name": "entity.name.tag.prd-assignee",
+            "match": "@[\\w-]+(?:-copilot)?"
+        }
+    },
+    "scopeName": "text.prd.markdown"
+}
