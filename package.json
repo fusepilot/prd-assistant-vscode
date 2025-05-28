@@ -137,6 +137,18 @@
       {
         "command": "prd-manager.debugScan",
         "title": "PRD: Debug Scan Workspace"
+      },
+      {
+        "command": "prd-manager.convertListItem",
+        "title": "Convert to Task"
+      },
+      {
+        "command": "prd-manager.convertSectionListItems",
+        "title": "Convert Section List Items to Tasks"
+      },
+      {
+        "command": "prd-manager.convertAllListItems",
+        "title": "Convert All List Items to Tasks"
       }
     ],
     "views": {
@@ -227,6 +239,18 @@
         },
         {
           "command": "prd-manager.toggleCodeLensOff",
+          "when": "false"
+        },
+        {
+          "command": "prd-manager.convertListItem",
+          "when": "false"
+        },
+        {
+          "command": "prd-manager.convertSectionListItems",
+          "when": "false"
+        },
+        {
+          "command": "prd-manager.convertAllListItems",
           "when": "false"
         }
       ],

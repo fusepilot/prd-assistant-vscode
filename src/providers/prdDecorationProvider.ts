@@ -106,15 +106,12 @@ export class PrdDecorationProvider implements vscode.Disposable {
             const prdIdRegex = /PRD-\d{6}/g;
             let match;
             while ((match = prdIdRegex.exec(line)) !== null) {
-                // Skip if it's already in a comment
-                if (!line.substring(0, match.index).includes('<!--')) {
-                    const startPos = new vscode.Position(lineIndex, match.index);
-                    const endPos = new vscode.Position(lineIndex, match.index + match[0].length);
-                    taskIdDecorations.push({
-                        range: new vscode.Range(startPos, endPos),
-                        hoverMessage: `Go to ${match[0]}`
-                    });
-                }
+                const startPos = new vscode.Position(lineIndex, match.index);
+                const endPos = new vscode.Position(lineIndex, match.index + match[0].length);
+                taskIdDecorations.push({
+                    range: new vscode.Range(startPos, endPos),
+                    hoverMessage: `Go to ${match[0]}`
+                });
             }
         });
 
