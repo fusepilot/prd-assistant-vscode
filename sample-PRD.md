@@ -9,7 +9,7 @@
   - [x] Add JWT token generation PRD-100003
   - [x] Implement refresh token logic PRD-100004
 - [ ] Design responsive UI components @frontend-team PRD-100005
-  - [ ] Create reusable button component PRD-100006
+  - [x] Create reusable button component PRD-100006
   - [x] Build form validation system PRD-100007
 - [x] Set up CI/CD pipeline @devops-team PRD-100008
 - [x] Write comprehensive test suite @qa-team PRD-100009

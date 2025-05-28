@@ -42,25 +42,39 @@ export class PrdTaskManager {
     for (let i = 0; i < lines.length; i++) {
       let line = lines[i];
 
-      // First, normalize checkbox formatting
-      const checkboxMatch = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([^\]]*)\]/);
-      if (checkboxMatch) {
-        const [fullMatch, indent, bullet, checkboxContent] = checkboxMatch;
-        let needsNormalization = false;
+      // First, normalize task formatting (checkbox and spacing)
+      const taskMatch = line.match(/^(\s*)(-|\*|\d+\.)\s*\[([^\]]*)\]\s*(.*?)$/);
+      if (taskMatch) {
+        const [, indent, bullet, checkboxContent, restOfLine] = taskMatch;
         
-        // Check if checkbox needs normalization
-        if (checkboxContent === "" || (checkboxContent !== " " && checkboxContent !== "x")) {
-          if (checkboxContent === "" || checkboxContent === "  " || checkboxContent === "   ") {
-            // Normalize empty checkbox variations
-            line = line.replace(/^(\s*)(-|\*|\d+\.)\s+\[[^\]]*\]/, `${indent}${bullet} [ ]`);
-            lines[i] = line;
-            modified = true;
-          } else if (checkboxContent.toLowerCase() === "x" || checkboxContent === " x" || checkboxContent === "x " || checkboxContent === " x ") {
-            // Normalize checked checkbox variations
-            line = line.replace(/^(\s*)(-|\*|\d+\.)\s+\[[^\]]*\]/, `${indent}${bullet} [x]`);
-            lines[i] = line;
-            modified = true;
-          }
+        // Normalize checkbox content
+        let normalizedCheckbox = checkboxContent;
+        if (checkboxContent === "" || checkboxContent === " " || checkboxContent === "  " || checkboxContent === "   ") {
+          normalizedCheckbox = " ";
+        } else if (checkboxContent.toLowerCase() === "x" || checkboxContent === " x" || checkboxContent === "x " || checkboxContent === " x ") {
+          normalizedCheckbox = "x";
+        }
+        
+        // Handle multiple or misplaced PRD IDs in the rest of the line
+        let cleanedRestOfLine = restOfLine.trim();
+        const prdIds = cleanedRestOfLine.match(/PRD-\d{6}/g);
+        
+        if (prdIds && prdIds.length > 0) {
+          // Remove all PRD IDs from the text
+          cleanedRestOfLine = cleanedRestOfLine.replace(/PRD-\d{6}/g, '').trim();
+          // Remove extra spaces that might be left behind
+          cleanedRestOfLine = cleanedRestOfLine.replace(/\s+/g, ' ').trim();
+          // Add back only one ID at the end
+          cleanedRestOfLine = `${cleanedRestOfLine} ${prdIds[0]}`;
+        }
+        
+        // Build normalized line with consistent single spacing
+        const normalizedLine = `${indent}- [${normalizedCheckbox}] ${cleanedRestOfLine}`;
+        
+        if (normalizedLine !== line) {
+          line = normalizedLine;
+          lines[i] = line;
+          modified = true;
         }
       }
 
@@ -79,19 +93,31 @@ export class PrdTaskManager {
       const match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(PRD-\d{6})?$/);
 
       if (match) {
-        const [, indent, bullet, checked, text, assignee, existingId] = match;
+        const [, indent, bullet, checked, textContent, assignee, existingId] = match;
         let taskId = existingId;
+        let text = textContent;
 
         // Check for duplicate IDs but don't fix them here - let fixDuplicatesWithUndo handle it
         if (taskId && (seenIds.has(taskId) || existingIdsFromOtherDocs.has(taskId))) {
           // Skip duplicate tasks during processing
           continue;
         } else if (!taskId && this.getConfig("autoGenerateIds")) {
-          // Generate ID if missing
-          taskId = this.generateTaskId();
-          // Preserve the original bullet type
-          lines[i] = `${indent}${bullet} [${checked}] ${text}${assignee ? ` @${assignee}` : ""} ${taskId}`;
-          modified = true;
+          // Check if there's already an ID in the text (e.g., no space before ID)
+          const idInText = text.match(/(.*?)(PRD-\d{6})$/);
+          if (idInText) {
+            // ID exists in text, extract it
+            taskId = idInText[2];
+            text = idInText[1].trim();
+            // Rewrite the line with proper spacing
+            lines[i] = `${indent}${bullet} [${checked}] ${text}${assignee ? ` @${assignee}` : ""} ${taskId}`;
+            modified = true;
+          } else {
+            // Generate ID if missing
+            taskId = this.generateTaskId();
+            // Preserve the original bullet type
+            lines[i] = `${indent}${bullet} [${checked}] ${text}${assignee ? ` @${assignee}` : ""} ${taskId}`;
+            modified = true;
+          }
         }
 
         if (taskId) {
@@ -838,31 +864,41 @@ export class PrdTaskManager {
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
 
-      // Look for task lines with improperly formatted checkboxes
-      const match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([^\]]*)\]/);
+      // Look for task lines - match with flexible spacing
+      const match = line.match(/^(\s*)(-|\*|\d+\.)\s*\[([^\]]*)\]\s*(.*?)$/);
 
       if (match) {
-        const [fullMatch, indent, bullet, checkboxContent] = match;
-        let normalized: string | null = null;
-
-        // Normalize various checkbox formats
+        const [, indent, bullet, checkboxContent, restOfLine] = match;
+        
+        // Normalize checkbox content
+        let normalizedCheckbox = checkboxContent;
         if (checkboxContent === "" || checkboxContent === " " || checkboxContent === "  " || checkboxContent === "   ") {
-          // Empty checkbox variations -> [ ]
-          normalized = `${indent}${bullet} [ ]`;
+          normalizedCheckbox = " ";
         } else if (checkboxContent.toLowerCase() === "x" || checkboxContent === " x" || checkboxContent === "x " || checkboxContent === " x ") {
-          // Checked checkbox variations -> [x]
-          normalized = `${indent}${bullet} [x]`;
+          normalizedCheckbox = "x";
         }
+        
+        // Handle multiple or misplaced PRD IDs in the rest of the line
+        let cleanedRestOfLine = restOfLine.trim();
+        const prdIds = cleanedRestOfLine.match(/PRD-\d{6}/g);
+        
+        if (prdIds && prdIds.length > 0) {
+          // Remove all PRD IDs from the text
+          cleanedRestOfLine = cleanedRestOfLine.replace(/PRD-\d{6}/g, '').trim();
+          // Remove extra spaces that might be left behind
+          cleanedRestOfLine = cleanedRestOfLine.replace(/\s+/g, ' ').trim();
+          // Add back only one ID at the end
+          cleanedRestOfLine = `${cleanedRestOfLine} ${prdIds[0]}`;
+        }
+        
+        // Build normalized line with consistent single spacing
+        // Always use dash (-) and ensure single spaces
+        const normalizedLine = `${indent}- [${normalizedCheckbox}] ${cleanedRestOfLine}`;
 
-        if (normalized) {
-          // Get the range up to and including the checkbox
-          const checkboxEndIndex = match.index! + fullMatch.length;
-          const restOfLine = line.substring(checkboxEndIndex);
-          const newLine = normalized + restOfLine;
-
+        // Only create edit if line changed
+        if (normalizedLine !== line) {
           const range = new vscode.Range(new vscode.Position(i, 0), new vscode.Position(i, line.length));
-
-          edits.push(vscode.TextEdit.replace(range, newLine));
+          edits.push(vscode.TextEdit.replace(range, normalizedLine));
         }
       }
     }

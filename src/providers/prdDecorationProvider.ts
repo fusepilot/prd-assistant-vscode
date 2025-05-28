@@ -61,7 +61,7 @@ export class PrdDecorationProvider implements vscode.Disposable {
 
         lines.forEach((line, lineIndex) => {
             // Check for task lines
-            const taskMatch = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(?:<!--\s*(PRD-\d{6})\s*-->)?$/);
+            const taskMatch = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(PRD-\d{6})?$/);
             
             if (taskMatch) {
                 const [, , , checked, taskText, assignee, taskId] = taskMatch;
