@@ -54,6 +54,46 @@ export function activate(context: vscode.ExtensionContext) {
     const decorationProvider = new PrdDecorationProvider();
     context.subscriptions.push(decorationProvider);
 
+    // Define scan function for reuse
+    const scanWorkspaceForPRDs = async () => {
+        console.log('Scanning workspace for PRD files...');
+        // Try multiple patterns to catch all PRD files
+        const patterns = [
+            '**/*{PRD,prd}*.md',
+            '**/PRD*.md',
+            '**/prd*.md',
+            '**/*PRD*.md',
+            '**/*prd*.md'
+        ];
+        
+        const allPrdFiles = new Set<string>();
+        for (const pattern of patterns) {
+            const files = await vscode.workspace.findFiles(pattern, '**/node_modules/**');
+            files.forEach(file => allPrdFiles.add(file.toString()));
+        }
+        
+        const prdFiles = Array.from(allPrdFiles).map(uriString => vscode.Uri.parse(uriString));
+        console.log('Found PRD files:', prdFiles.map(f => f.fsPath));
+        
+        for (const file of prdFiles) {
+            try {
+                const doc = await vscode.workspace.openTextDocument(file);
+                console.log('Processing PRD file:', doc.fileName);
+                await taskManager.processDocument(doc);
+                
+                // Check how many tasks were found
+                const tasks = taskManager.getTasksByDocument(file);
+                console.log(`  -> Found ${tasks.length} tasks in ${doc.fileName}`);
+            } catch (error) {
+                console.log('Error processing PRD file:', file.fsPath, error);
+            }
+        }
+        
+        // After processing all files, log the documents in the task manager
+        const documents = taskManager.getDocuments();
+        console.log('TaskManager now has documents:', documents.map(d => d.fsPath));
+    };
+
     // Register commands
     context.subscriptions.push(
         vscode.commands.registerCommand('prd-manager.toggleTask', async (item?: any) => {
@@ -414,7 +454,19 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('prd-manager.refreshTasks', () => {
+        vscode.commands.registerCommand('prd-manager.debugScan', async () => {
+            console.log('=== DEBUG SCAN TRIGGERED ===');
+            await scanWorkspaceForPRDs();
+            treeProvider.refresh();
+            const documents = taskManager.getDocuments();
+            vscode.window.showInformationMessage(`Found ${documents.length} PRD documents. Check console for details.`);
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('prd-manager.refreshTasks', async () => {
+            // Rescan workspace for PRD files
+            await scanWorkspaceForPRDs();
             treeProvider.refresh();
             vscode.window.showInformationMessage('PRD Tasks refreshed');
         })
@@ -537,14 +589,39 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand('prd-manager.goToHeader', async (header: string) => {
             if (typeof header === 'string') {
-                const headerText = header.replace(/^#+\s+/, '');
-                const headerLevel = header.match(/^#+/)?.[0].length || 0;
+                let headerText: string;
+                let headerLevel: number;
+                let documentUri: vscode.Uri | null = null;
                 
-                // Find the first PRD file with this header
-                const allTasks = taskManager.getAllTasks();
-                if (allTasks.length > 0) {
-                    // Get document from first task
-                    const doc = await vscode.workspace.openTextDocument(allTasks[0].document);
+                // Parse header to extract document URI if present (multi-file mode)
+                if (header.includes('::')) {
+                    const [uriString, headerPart] = header.split('::', 2);
+                    documentUri = vscode.Uri.parse(uriString);
+                    headerText = headerPart.replace(/^#+\s+/, '');
+                    headerLevel = headerPart.match(/^#+/)?.[0].length || 0;
+                } else {
+                    // Single file mode
+                    headerText = header.replace(/^#+\s+/, '');
+                    headerLevel = header.match(/^#+/)?.[0].length || 0;
+                }
+                
+                // Determine which document to search
+                let targetDocument: vscode.Uri | undefined;
+                if (documentUri) {
+                    targetDocument = documentUri;
+                } else {
+                    // Single file mode: find any document with this header
+                    const allTasks = taskManager.getAllTasks();
+                    for (const task of allTasks) {
+                        if (task.headers && task.headers.some(h => h.text === headerText && h.level === headerLevel)) {
+                            targetDocument = task.document;
+                            break;
+                        }
+                    }
+                }
+                
+                if (targetDocument) {
+                    const doc = await vscode.workspace.openTextDocument(targetDocument);
                     const text = doc.getText();
                     const lines = text.split('\n');
                     
@@ -571,6 +648,15 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     context.subscriptions.push(
+        vscode.commands.registerCommand('prd-manager.openDocument', async (documentNode: any) => {
+            if (documentNode && documentNode.uri) {
+                const doc = await vscode.workspace.openTextDocument(documentNode.uri);
+                await vscode.window.showTextDocument(doc);
+            }
+        })
+    );
+
+    context.subscriptions.push(
         vscode.commands.registerCommand('prd-manager.goToTask', async (item: any) => {
             let taskId: string | undefined;
             
@@ -582,12 +668,16 @@ export function activate(context: vscode.ExtensionContext) {
             } else {
                 // Try to get from tree selection
                 const selection = treeView.selection[0];
-                if (selection && typeof selection !== 'string' && selection.id) {
-                    taskId = selection.id;
+                if (selection && typeof selection !== 'string' && !(typeof selection === 'object' && 'type' in selection)) {
+                    // This is a PrdTask
+                    const task = selection as any;
+                    if (task.id) {
+                        taskId = task.id;
+                    }
                 }
             }
             
-            if (!taskId) return;
+            if (!taskId) {return;}
             
             const task = taskManager.getTaskById(taskId);
             if (task) {
@@ -765,6 +855,12 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
+    // Scan workspace for PRD files on activation
+    scanWorkspaceForPRDs().then(() => {
+        console.log('Workspace scan complete, refreshing tree view');
+        treeProvider.refresh();
+    });
+
     // Process newly opened documents
     context.subscriptions.push(
         vscode.workspace.onDidOpenTextDocument(doc => {
@@ -779,6 +875,18 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.workspace.onDidChangeTextDocument(() => {
             treeProvider.refresh();
+        })
+    );
+
+    // Also refresh when active editor changes (this might fix the "switch file" issue)
+    context.subscriptions.push(
+        vscode.window.onDidChangeActiveTextEditor(async (editor) => {
+            if (editor && editor.document.languageId === 'markdown') {
+                console.log('Active editor changed to markdown file:', editor.document.fileName);
+                // Process the document if it's not already processed
+                await taskManager.processDocument(editor.document);
+                treeProvider.refresh();
+            }
         })
     );
 

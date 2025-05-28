@@ -13,7 +13,9 @@
   "activationEvents": [
     "onLanguage:markdown",
     "workspaceContains:**/PRD.md",
-    "workspaceContains:**/prd.md"
+    "workspaceContains:**/prd.md",
+    "workspaceContains:**/*PRD*.md",
+    "workspaceContains:**/*prd*.md"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -126,6 +128,15 @@
       {
         "command": "prd-manager.goToHeader",
         "title": "Go to Header"
+      },
+      {
+        "command": "prd-manager.openDocument",
+        "title": "Open Document",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "prd-manager.debugScan",
+        "title": "PRD: Debug Scan Workspace"
       }
     ],
     "views": {
@@ -300,6 +311,11 @@
         {
           "command": "prd-manager.goToHeader",
           "when": "view == prdExplorer && viewItem == prdHeader",
+          "group": "navigation@1"
+        },
+        {
+          "command": "prd-manager.openDocument",
+          "when": "view == prdExplorer && viewItem == prdDocument",
           "group": "navigation@1"
         }
       ],

@@ -15,10 +15,11 @@ export class PrdTaskManager {
   async processDocument(document: vscode.TextDocument): Promise<void> {
     // Skip if we're already processing to avoid loops
     if (this.isProcessing) {
+      console.log("Skipping document processing (already in progress):", document.fileName);
       return;
     }
 
-    console.log("Processing document:", document.fileName);
+    console.log("Processing document:", document.fileName, "URI:", document.uri.toString());
 
     const allTasks: PrdTask[] = [];
     const content = document.getText();
@@ -471,7 +472,7 @@ export class PrdTaskManager {
 
   async assignTask(taskId: string, assignee: string): Promise<void> {
     const task = this.taskById.get(taskId);
-    if (!task) return;
+    if (!task) {return;}
 
     // Read the file content directly without opening in editor
     const fileContent = await vscode.workspace.fs.readFile(task.document);
@@ -524,12 +525,12 @@ export class PrdTaskManager {
 
     this.taskById.forEach((task) => {
       totalTasks++;
-      if (task.completed) completedTasks++;
+      if (task.completed) {completedTasks++;}
 
       if (task.assignee) {
         const stats = tasksByAssignee.get(task.assignee) || { total: 0, completed: 0 };
         stats.total++;
-        if (task.completed) stats.completed++;
+        if (task.completed) {stats.completed++;}
         tasksByAssignee.set(task.assignee, stats);
       }
     });
@@ -566,6 +567,10 @@ export class PrdTaskManager {
 
   getTasksByDocument(uri: vscode.Uri): PrdTask[] {
     return this.tasks.get(uri.toString()) || [];
+  }
+
+  getDocuments(): vscode.Uri[] {
+    return Array.from(this.tasks.keys()).map(uriString => vscode.Uri.parse(uriString));
   }
 
   getTaskById(taskId: string): PrdTask | undefined {
