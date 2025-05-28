@@ -37,8 +37,8 @@ export class PrdDocumentLinkProvider implements vscode.DocumentLinkProvider {
             const document = await vscode.workspace.openTextDocument(file);
             const text = document.getText();
             
-            // Look for the task ID in comments
-            const regex = new RegExp(`<!--\\s*${taskId}\\s*-->`, 'g');
+            // Look for the task ID
+            const regex = new RegExp(`\\b${taskId}\\b`, 'g');
             const match = regex.exec(text);
             
             if (match) {

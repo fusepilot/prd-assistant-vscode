@@ -9,7 +9,7 @@ export class PrdTaskManager {
     private idCounter = 0;
     private isProcessing = false;
 
-    private readonly taskRegex = /^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(?:<!--\s*(PRD-\d{6})\s*-->)?$/gm;
+    private readonly taskRegex = /^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(PRD-\d{6})?$/gm;
     private readonly taskIdRegex = /PRD-\d{6}/g;
 
     async processDocument(document: vscode.TextDocument): Promise<void> {
@@ -54,7 +54,7 @@ export class PrdTaskManager {
                 continue;
             }
             
-            const match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(?:<!--\s*(PRD-\d{6})\s*-->)?$/);
+            const match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(PRD-\d{6})?$/);
             
             if (match) {
                 const [, indent, bullet, checked, text, assignee, existingId] = match;
@@ -68,7 +68,7 @@ export class PrdTaskManager {
                     // Generate ID if missing
                     taskId = this.generateTaskId();
                     // Preserve the original bullet type
-                    lines[i] = `${indent}${bullet} [${checked}] ${text}${assignee ? ` @${assignee}` : ''} <!-- ${taskId} -->`;
+                    lines[i] = `${indent}${bullet} [${checked}] ${text}${assignee ? ` @${assignee}` : ''} ${taskId}`;
                     modified = true;
                 }
 
@@ -168,7 +168,7 @@ export class PrdTaskManager {
         }
 
         const line = lines[task.line];
-        const match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(?:<!--\s*(PRD-\d{6})\s*-->)?$/);
+        const match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(PRD-\d{6})?$/);
 
         if (match) {
             const [, indent, bullet, checked, taskText, assignee, foundTaskId] = match;
@@ -180,7 +180,7 @@ export class PrdTaskManager {
             }
 
             const newChecked = checked === ' ' ? 'x' : ' ';
-            lines[task.line] = `${indent}${bullet} [${newChecked}] ${taskText}${assignee ? ` @${assignee}` : ''}${foundTaskId ? ` <!-- ${foundTaskId} -->` : ''}`;
+            lines[task.line] = `${indent}${bullet} [${newChecked}] ${taskText}${assignee ? ` @${assignee}` : ''}${foundTaskId ? ` ${foundTaskId}` : ''}`;
 
             // Write the file back
             this.isProcessing = true;
@@ -205,7 +205,7 @@ export class PrdTaskManager {
 
     async toggleTaskAtPosition(document: vscode.TextDocument, position: vscode.Position): Promise<void> {
         const line = document.lineAt(position.line);
-        const match = line.text.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(?:<!--\s*(PRD-\d{6})\s*-->)?$/);
+        const match = line.text.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(PRD-\d{6})?$/);
 
         if (match) {
             const [, indent, bullet, checked, text, assignee, taskId] = match;
@@ -229,7 +229,7 @@ export class PrdTaskManager {
         const position = editor.selection.active;
         const line = position.line;
         const taskId = this.generateTaskId();
-        const taskLine = `- [ ] ${taskText}${assignee ? ` @${assignee}` : ''} <!-- ${taskId} -->`;
+        const taskLine = `- [ ] ${taskText}${assignee ? ` @${assignee}` : ''} ${taskId}`;
 
         // Check if we should add empty line before the task
         const currentLine = editor.document.lineAt(line).text;
@@ -274,7 +274,7 @@ export class PrdTaskManager {
     async addTaskAtPosition(editor: vscode.TextEditor, position: vscode.Position, taskText: string, assignee?: string): Promise<void> {
         const line = position.line;
         const taskId = this.generateTaskId();
-        const taskLine = `- [ ] ${taskText}${assignee ? ` @${assignee}` : ''} <!-- ${taskId} -->`;
+        const taskLine = `- [ ] ${taskText}${assignee ? ` @${assignee}` : ''} ${taskId}`;
 
         // Check if we should add empty line before the task
         const currentLine = editor.document.lineAt(line).text;
@@ -359,7 +359,7 @@ export class PrdTaskManager {
 
         const taskId = this.generateTaskId();
         // No indentation - tasks should be at the beginning of the line
-        const taskLine = `- [ ] ${taskText}${assignee ? ` @${assignee}` : ''} <!-- ${taskId} -->`;
+        const taskLine = `- [ ] ${taskText}${assignee ? ` @${assignee}` : ''} ${taskId}`;
 
         this.isProcessing = true;
         const edit = new vscode.WorkspaceEdit();
@@ -444,8 +444,8 @@ export class PrdTaskManager {
         // Remove existing assignee if present
         line = line.replace(/@[\w-]+(?:-copilot)?/, '').trim();
         
-        // Add new assignee before the task ID comment
-        line = line.replace(/(\s*<!--\s*PRD-\d{6}\s*-->)$/, ` ${assignee}$1`);
+        // Add new assignee before the task ID
+        line = line.replace(/(\s*PRD-\d{6})$/, ` ${assignee}$1`);
 
         lines[task.line] = line;
 
@@ -469,7 +469,7 @@ export class PrdTaskManager {
 
     getTaskIdAtPosition(document: vscode.TextDocument, position: vscode.Position): string | undefined {
         const line = document.lineAt(position.line);
-        const match = line.text.match(/<!--\s*(PRD-\d{6})\s*-->/);
+        const match = line.text.match(/(PRD-\d{6})/);
         return match ? match[1] : undefined;
     }
 
@@ -541,7 +541,7 @@ export class PrdTaskManager {
         });
 
         for (const line of lines) {
-            const match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(?:<!--\s*(PRD-\d{6})\s*-->)?$/);
+            const match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(PRD-\d{6})?$/);
             
             if (match) {
                 const [, , , , , , taskId] = match;
@@ -574,7 +574,7 @@ export class PrdTaskManager {
         // Find all duplicates
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
-            const match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(?:<!--\s*(PRD-\d{6})\s*-->)?$/);
+            const match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(PRD-\d{6})?$/);
             
             if (match) {
                 const [, indent, bullet, checked, text, assignee, taskId] = match;
@@ -582,7 +582,7 @@ export class PrdTaskManager {
                 if (taskId && (seenIds.has(taskId) || existingIdsFromOtherDocs.has(taskId))) {
                     // Found a duplicate
                     const newTaskId = this.generateNextSequentialId(taskId, seenIds, existingIdsFromOtherDocs);
-                    const newLine = `${indent}${bullet} [${checked}] ${text}${assignee ? ` @${assignee}` : ''} <!-- ${newTaskId} -->`;
+                    const newLine = `${indent}${bullet} [${checked}] ${text}${assignee ? ` @${assignee}` : ''} ${newTaskId}`;
                     
                     duplicates.push({
                         line: i,
@@ -656,7 +656,7 @@ export class PrdTaskManager {
         
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
-            const match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(?:<!--\s*(PRD-\d{6})\s*-->)?$/);
+            const match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(PRD-\d{6})?$/);
             
             if (match) {
                 const taskId = match[6];
@@ -696,7 +696,7 @@ export class PrdTaskManager {
         // Find all duplicates
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
-            const match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(?:<!--\s*(PRD-\d{6})\s*-->)?$/);
+            const match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(PRD-\d{6})?$/);
             
             if (match) {
                 const [, indent, bullet, checked, text, assignee, taskId] = match;
@@ -704,7 +704,7 @@ export class PrdTaskManager {
                 if (taskId && (seenIds.has(taskId) || existingIdsFromOtherDocs.has(taskId))) {
                     // Found a duplicate
                     const newTaskId = this.generateNextSequentialId(taskId, seenIds, existingIdsFromOtherDocs);
-                    const newLine = `${indent}${bullet} [${checked}] ${text}${assignee ? ` @${assignee}` : ''} <!-- ${newTaskId} -->`;
+                    const newLine = `${indent}${bullet} [${checked}] ${text}${assignee ? ` @${assignee}` : ''} ${newTaskId}`;
                     
                     duplicates.push({
                         line: i,
