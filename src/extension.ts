@@ -16,8 +16,17 @@ export function activate(context: vscode.ExtensionContext) {
     const treeProvider = new PrdTreeProvider(taskManager);
     const treeView = vscode.window.createTreeView('prdExplorer', {
         treeDataProvider: treeProvider,
-        showCollapseAll: true
+        showCollapseAll: false  // We'll implement custom toggle
     });
+    
+    // Track expand/collapse state
+    let areItemsCollapsed = false;
+    
+    // Ensure the tree view is ready before allowing collapse/expand
+    let treeViewReady = false;
+    setTimeout(() => {
+        treeViewReady = true;
+    }, 500);
 
     // Register checkbox click handler
     const checkboxProvider = new PrdCheckboxProvider(taskManager);
@@ -131,11 +140,46 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('prd-manager.addTaskToHeader', async (headerLine: number, headerLevel: number, headerText: string) => {
+        vscode.commands.registerCommand('prd-manager.addTaskToHeader', async (headerLine: number | string, headerLevel?: number, headerText?: string) => {
             const editor = vscode.window.activeTextEditor;
             if (!editor) {
                 vscode.window.showErrorMessage('No active editor');
                 return;
+            }
+
+            // Handle call from tree view (header string) vs CodeLens (individual args)
+            let finalHeaderLine: number;
+            let finalHeaderLevel: number;
+            let finalHeaderText: string;
+            
+            if (typeof headerLine === 'string') {
+                // Called from tree view with header string like "## Header Name"
+                const headerStr = headerLine;
+                finalHeaderText = headerStr.replace(/^#+\s+/, '');
+                finalHeaderLevel = headerStr.match(/^#+/)?.[0].length || 1;
+                
+                // Find the header line in the document
+                const allTasks = taskManager.getAllTasks();
+                const tasksWithThisHeader = allTasks.filter(task => 
+                    task.headers?.some(h => h.text === finalHeaderText && h.level === finalHeaderLevel)
+                );
+                
+                if (tasksWithThisHeader.length > 0) {
+                    const headerInfo = tasksWithThisHeader[0].headers?.find(h => h.text === finalHeaderText && h.level === finalHeaderLevel);
+                    finalHeaderLine = headerInfo?.line || 0;
+                } else {
+                    // Find in document directly
+                    const lines = editor.document.getText().split('\n');
+                    finalHeaderLine = lines.findIndex(line => {
+                        const match = line.match(/^(#{1,6})\s+(.+)$/);
+                        return match && match[1].length === finalHeaderLevel && match[2] === finalHeaderText;
+                    });
+                }
+            } else {
+                // Called from CodeLens with individual parameters
+                finalHeaderLine = headerLine;
+                finalHeaderLevel = headerLevel!;
+                finalHeaderText = headerText!;
             }
 
             const taskText = await vscode.window.showInputBox({
@@ -149,7 +193,100 @@ export function activate(context: vscode.ExtensionContext) {
                     placeHolder: '@username-copilot'
                 });
 
-                await taskManager.addTaskToHeader(editor, headerLine, headerLevel, headerText, taskText, assignee);
+                await taskManager.addTaskToHeader(editor, finalHeaderLine, finalHeaderLevel, finalHeaderText, taskText, assignee);
+            }
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('prd-manager.addTaskToTask', async (item: any) => {
+            if (!item || !item.id) {
+                vscode.window.showErrorMessage('No task selected');
+                return;
+            }
+
+            const editor = vscode.window.activeTextEditor;
+            if (!editor) {
+                vscode.window.showErrorMessage('No active editor');
+                return;
+            }
+
+            const taskText = await vscode.window.showInputBox({
+                prompt: 'Enter subtask description',
+                placeHolder: 'Subtask description'
+            });
+
+            if (taskText) {
+                const assignee = await vscode.window.showInputBox({
+                    prompt: 'Assign to (optional)',
+                    placeHolder: '@username-copilot'
+                });
+
+                // Find the parent task in the document
+                const parentTask = taskManager.getTaskById(item.id);
+                if (parentTask) {
+                    const parentLine = parentTask.line;
+                    const taskId = taskManager.generateNewTaskId();
+                    const taskLine = `  - [ ] ${taskText}${assignee ? ` @${assignee}` : ''} <!-- ${taskId} -->`;
+                    
+                    // Find the end of the existing subtask group
+                    let insertLine = parentLine;
+                    const totalLines = editor.document.lineCount;
+                    
+                    // Look for the last subtask of this parent
+                    for (let i = parentLine + 1; i < totalLines; i++) {
+                        const line = editor.document.lineAt(i).text;
+                        const isSubtask = line.match(/^\s{2,}(-|\*|\d+\.)\s+\[[ x]\]/); // Indented task (subtask)
+                        const isTask = line.match(/^(-|\*|\d+\.)\s+\[[ x]\]/); // Non-indented task
+                        const isHeader = line.match(/^#{1,6}\s+/);
+                        const isEmpty = line.trim() === '';
+                        
+                        if (isSubtask) {
+                            // This is a subtask, update our insert position
+                            insertLine = i;
+                        } else if (isTask || isHeader || (!isEmpty && !isSubtask)) {
+                            // Hit a non-subtask item, stop looking
+                            break;
+                        }
+                        // Continue if it's an empty line
+                    }
+                    
+                    // Check if we should add empty lines before and after
+                    const insertAfterLineText = editor.document.lineAt(insertLine).text;
+                    const insertAfterLineIsTask = insertAfterLineText.match(/^(-|\*|\d+\.)\s+\[[ x]\]/) || insertAfterLineText.match(/^\s{2,}(-|\*|\d+\.)\s+\[[ x]\]/);
+                    
+                    let shouldAddEmptyLineBefore = false;
+                    if (!insertAfterLineIsTask) {
+                        // If line we're inserting after is not a task, add empty line before
+                        shouldAddEmptyLineBefore = true;
+                    }
+                    
+                    const nextLineExists = insertLine + 1 < editor.document.lineCount;
+                    let shouldAddEmptyLineAfter = false;
+                    
+                    if (nextLineExists) {
+                        const nextLine = editor.document.lineAt(insertLine + 1).text;
+                        const nextLineIsEmpty = nextLine.trim() === '';
+                        const nextLineIsSubtask = nextLine.match(/^\s{2,}(-|\*|\d+\.)\s+\[[ x]\]/); // Indented task
+                        const nextLineIsTask = nextLine.match(/^(-|\*|\d+\.)\s+\[[ x]\]/); // Non-indented task
+                        const nextLineIsHeader = nextLine.match(/^#{1,6}\s+/);
+                        
+                        // Add empty line if we're at the end of the subtask group
+                        shouldAddEmptyLineAfter = !nextLineIsEmpty && !nextLineIsSubtask && !nextLineIsTask && !nextLineIsHeader;
+                    }
+                    
+                    let textToInsert = taskLine + '\n';
+                    if (shouldAddEmptyLineBefore) {
+                        textToInsert = '\n' + textToInsert;
+                    }
+                    if (shouldAddEmptyLineAfter) {
+                        textToInsert = textToInsert + '\n';
+                    }
+
+                    const edit = new vscode.WorkspaceEdit();
+                    edit.insert(editor.document.uri, new vscode.Position(insertLine + 1, 0), textToInsert);
+                    await vscode.workspace.applyEdit(edit);
+                }
             }
         })
     );
@@ -178,13 +315,62 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('prd-manager.assignTask', async (taskId?: string) => {
-            const assignee = await vscode.window.showInputBox({
-                prompt: 'Assign to',
-                placeHolder: '@username-copilot'
-            });
+        vscode.commands.registerCommand('prd-manager.assignTask', async (item?: any) => {
+            let taskId: string | undefined;
+            
+            // Handle different input types
+            if (typeof item === 'string') {
+                taskId = item;
+            } else if (item && item.id) {
+                taskId = item.id;
+            }
+            
+            if (!taskId) {
+                vscode.window.showErrorMessage('No task selected');
+                return;
+            }
 
-            if (assignee && taskId) {
+            // Get existing assignees for suggestions
+            const allTasks = taskManager.getAllTasks();
+            const existingAssignees = [...new Set(allTasks
+                .map(task => task.assignee)
+                .filter(assignee => assignee)
+                .map(assignee => assignee!.startsWith('@') ? assignee! : `@${assignee!}`)
+            )];
+            
+            let assignee: string | undefined;
+            
+            if (existingAssignees.length > 0) {
+                // Show quick pick with existing assignees plus option to enter new
+                const items = [
+                    ...existingAssignees.map(name => ({ label: name, description: 'Existing assignee' })),
+                    { label: '$(plus) Enter new assignee...', description: 'Type a new assignee name' }
+                ];
+                
+                const selected = await vscode.window.showQuickPick(items, {
+                    placeHolder: 'Select assignee or enter new'
+                });
+                
+                if (selected) {
+                    if (selected.label.startsWith('$(plus)')) {
+                        // User wants to enter new assignee
+                        assignee = await vscode.window.showInputBox({
+                            prompt: 'Assign to',
+                            placeHolder: '@username-copilot'
+                        });
+                    } else {
+                        assignee = selected.label;
+                    }
+                }
+            } else {
+                // No existing assignees, show input box directly
+                assignee = await vscode.window.showInputBox({
+                    prompt: 'Assign to',
+                    placeHolder: '@username-copilot'
+                });
+            }
+
+            if (assignee) {
                 await taskManager.assignTask(taskId, assignee);
             }
         })
@@ -235,6 +421,36 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     context.subscriptions.push(
+        vscode.commands.registerCommand('prd-manager.filterAllTasks', async () => {
+            // Try workspace first, fallback to global
+            const target = vscode.workspace.workspaceFolders ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global;
+            await vscode.workspace.getConfiguration('prdManager').update('taskFilter', 'all', target);
+            console.log('Set filter to all');
+            treeProvider.refresh();
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('prd-manager.filterCompletedTasks', async () => {
+            // Try workspace first, fallback to global
+            const target = vscode.workspace.workspaceFolders ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global;
+            await vscode.workspace.getConfiguration('prdManager').update('taskFilter', 'completed', target);
+            console.log('Set filter to completed');
+            treeProvider.refresh();
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('prd-manager.filterUncompletedTasks', async () => {
+            // Try workspace first, fallback to global
+            const target = vscode.workspace.workspaceFolders ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global;
+            await vscode.workspace.getConfiguration('prdManager').update('taskFilter', 'uncompleted', target);
+            console.log('Set filter to uncompleted');
+            treeProvider.refresh();
+        })
+    );
+
+    context.subscriptions.push(
         vscode.commands.registerCommand('prd-manager.copyTaskId', async (item: any) => {
             let taskId: string | undefined;
             
@@ -253,9 +469,39 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(
         vscode.commands.registerCommand('prd-manager.copyTaskText', async (item: any) => {
-            if (item && item.text) {
-                await vscode.env.clipboard.writeText(item.text);
-                vscode.window.showInformationMessage('Copied task text to clipboard');
+            if (item && item.text && item.id) {
+                const textWithId = `${item.text} <!-- ${item.id} -->`;
+                await vscode.env.clipboard.writeText(textWithId);
+                vscode.window.showInformationMessage('Copied task text with ID to clipboard');
+            }
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('prd-manager.copyHeaderTasksContext', async (header: string) => {
+            // Same logic as copyHeaderTasks but for context menu
+            if (typeof header === 'string') {
+                const allTasks = taskManager.getAllTasks();
+                const headerText = header.replace(/^#+\s+/, '');
+                const headerLevel = header.match(/^#+/)?.[0].length || 0;
+                
+                const tasksUnderHeader = allTasks.filter(task => {
+                    if (task.headers && task.headers.length > 0) {
+                        return task.headers.some(h => h.text === headerText && h.level === headerLevel);
+                    }
+                    return false;
+                });
+
+                const uncompletedTasks = tasksUnderHeader.filter(task => !task.completed);
+                
+                if (uncompletedTasks.length === 0) {
+                    vscode.window.showInformationMessage('No uncompleted tasks under this header');
+                    return;
+                }
+
+                const taskList = uncompletedTasks.map(task => task.id).join(', ');
+                await vscode.env.clipboard.writeText(taskList);
+                vscode.window.showInformationMessage(`Copied ${uncompletedTasks.length} uncompleted task IDs to clipboard`);
             }
         })
     );
@@ -356,14 +602,96 @@ export function activate(context: vscode.ExtensionContext) {
         })
     );
 
-    // Watch for document changes to update task IDs
+    // Add command to toggle collapse/expand tree view
+    context.subscriptions.push(
+        vscode.commands.registerCommand('prd-manager.toggleCollapseExpand', async () => {
+            // Wait for tree view to be ready
+            if (!treeViewReady) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                treeViewReady = true;
+            }
+            
+            if (areItemsCollapsed) {
+                // Expand all by revealing all top-level elements
+                const elements = await treeProvider.getChildren();
+                if (elements) {
+                    for (const element of elements) {
+                        if (typeof element === 'string') {
+                            // This is a header - reveal it as expanded
+                            try {
+                                await treeView.reveal(element, { 
+                                    expand: true, 
+                                    focus: false, 
+                                    select: false 
+                                });
+                            } catch (error) {
+                                // Ignore errors if element can't be revealed
+                            }
+                        }
+                    }
+                }
+                areItemsCollapsed = false;
+            } else {
+                // Collapse all using built-in command
+                await vscode.commands.executeCommand('workbench.actions.treeView.prdExplorer.collapseAll');
+                areItemsCollapsed = true;
+            }
+        })
+    );
+
+    // Add command to fix duplicates manually
+    context.subscriptions.push(
+        vscode.commands.registerCommand('prd-manager.fixDuplicates', async () => {
+            const editor = vscode.window.activeTextEditor;
+            if (editor && editor.document.languageId === 'markdown') {
+                await taskManager.fixDuplicates(editor);
+                vscode.window.showInformationMessage('Fixed duplicate task IDs');
+            }
+        })
+    );
+
+
+
+    // Create diagnostic collection for duplicate warnings
+    const diagnosticCollection = vscode.languages.createDiagnosticCollection('prd-duplicates');
+    context.subscriptions.push(diagnosticCollection);
+
+    // Watch for document changes to update task tracking and show duplicate warnings
     context.subscriptions.push(
         vscode.workspace.onDidChangeTextDocument(async (event) => {
-            if (event.document.languageId === 'markdown') {
-                // Debounce to avoid processing during our own edits
+            if (event.document.languageId === 'markdown' && event.contentChanges.length > 0) {
+                // Process document and check for duplicates
                 setTimeout(async () => {
                     await taskManager.processDocument(event.document);
-                }, 100);
+                    
+                    // Check for duplicates and show diagnostics
+                    const duplicates = await taskManager.findDuplicateTaskIds(event.document);
+                    const diagnostics: vscode.Diagnostic[] = [];
+                    
+                    for (const [taskId, lines] of duplicates) {
+                        if (lines.length > 1) {
+                            // Mark all but the first occurrence as duplicates
+                            for (let i = 1; i < lines.length; i++) {
+                                const line = lines[i];
+                                const range = new vscode.Range(
+                                    new vscode.Position(line, 0),
+                                    new vscode.Position(line, event.document.lineAt(line).text.length)
+                                );
+                                
+                                const diagnostic = new vscode.Diagnostic(
+                                    range,
+                                    `Duplicate task ID: ${taskId}. Use 'Fix Duplicates' command to auto-increment.`,
+                                    vscode.DiagnosticSeverity.Warning
+                                );
+                                diagnostic.code = 'duplicate-task-id';
+                                diagnostic.source = 'PRD Manager';
+                                diagnostics.push(diagnostic);
+                            }
+                        }
+                    }
+                    
+                    diagnosticCollection.set(event.document.uri, diagnostics);
+                }, 300);
             }
         })
     );
@@ -390,6 +718,15 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.workspace.onDidChangeTextDocument(() => {
             treeProvider.refresh();
+        })
+    );
+
+    // Refresh tree view when configuration changes (for filters)
+    context.subscriptions.push(
+        vscode.workspace.onDidChangeConfiguration((event) => {
+            if (event.affectsConfiguration('prdManager.taskFilter')) {
+                treeProvider.refresh();
+            }
         })
     );
 }

@@ -19,7 +19,12 @@ export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string
     if (typeof element === "string") {
       // This is a header
       const headerText = element.replace(/^#+\s+/, ""); // Remove the # symbols
-      const item = new vscode.TreeItem(headerText, vscode.TreeItemCollapsibleState.Expanded);
+      
+      // Check if this header has any tasks under it
+      const headerTasks = this.getTasksForHeader(element);
+      const hasChildren = headerTasks.length > 0;
+      
+      const item = new vscode.TreeItem(headerText, hasChildren ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.None);
       item.contextValue = "prdHeader";
 
       // Use the same icon for all header levels
@@ -47,7 +52,7 @@ export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string
       const item = new vscode.TreeItem(element.text, element.children.length > 0 ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.None);
 
       item.id = element.id;
-      item.contextValue = "prdTask";
+      item.contextValue = element.children.length > 0 ? "prdTaskWithChildren" : "prdTask";
 
       // Set checkbox icon based on completion status
       item.iconPath = new vscode.ThemeIcon(element.completed ? "pass-filled" : "circle-large-outline");
@@ -82,21 +87,38 @@ export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string
       // Return tasks under this header
       return Promise.resolve(this.getTasksForHeader(element));
     } else {
-      // Return children of the task
-      return Promise.resolve(element.children);
+      // Return children of the task, applying filter
+      const filter = vscode.workspace.getConfiguration('prdManager').get<'all' | 'completed' | 'uncompleted'>('taskFilter', 'all');
+      
+      let filteredChildren = element.children;
+      if (filter === 'completed') {
+        filteredChildren = element.children.filter(child => child.completed);
+      } else if (filter === 'uncompleted') {
+        filteredChildren = element.children.filter(child => !child.completed);
+      }
+      
+      return Promise.resolve(filteredChildren);
     }
   }
 
-  private getRootElements(): (PrdTask | string)[] {
+  public getRootElements(): (PrdTask | string)[] {
     const elements: (PrdTask | string)[] = [];
     const allTasks = this.taskManager.getAllTasks();
     const headerMap = new Map<string, PrdTask[]>();
+    
+    // Get current filter setting
+    const filter = vscode.workspace.getConfiguration('prdManager').get<'all' | 'completed' | 'uncompleted'>('taskFilter', 'all');
 
-    console.log("Getting root elements, total tasks:", allTasks.length);
+    console.log("Getting root elements, total tasks:", allTasks.length, "filter:", filter);
+    console.log("First few tasks completion status:", allTasks.slice(0, 3).map(t => ({ id: t.id, completed: t.completed })));
 
-    // Group tasks by their last header
+    // Group tasks by their last header, applying filter
     allTasks.forEach((task) => {
       if (task.parent) return; // Skip child tasks
+
+      // Apply filter
+      if (filter === 'completed' && !task.completed) return;
+      if (filter === 'uncompleted' && task.completed) return;
 
       let headerKey = "No Header";
       if (task.headers && task.headers.length > 0) {
@@ -127,9 +149,16 @@ export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string
     const allTasks = this.taskManager.getAllTasks();
     const headerText = header.replace(/^#+\s+/, "");
     const headerLevel = header.match(/^#+/)?.[0].length || 0;
+    
+    // Get current filter setting
+    const filter = vscode.workspace.getConfiguration('prdManager').get<'all' | 'completed' | 'uncompleted'>('taskFilter', 'all');
 
     return allTasks.filter((task) => {
       if (task.parent) return false; // Skip child tasks
+      
+      // Apply filter
+      if (filter === 'completed' && !task.completed) return false;
+      if (filter === 'uncompleted' && task.completed) return false;
 
       if (task.headers && task.headers.length > 0) {
         const lastHeader = task.headers[task.headers.length - 1];
@@ -145,4 +174,5 @@ export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string
     }
     return element.parent;
   }
+
 }

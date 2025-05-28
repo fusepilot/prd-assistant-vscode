@@ -18,36 +18,16 @@
   "contributes": {
     "commands": [
       {
-        "command": "prd-manager.toggleTask",
-        "title": "PRD: Toggle Task"
+        "command": "prd-manager.addTask",
+        "title": "PRD: Add New Task"
       },
       {
         "command": "prd-manager.generateReport",
         "title": "PRD: Generate Progress Report"
       },
       {
-        "command": "prd-manager.addTask",
-        "title": "PRD: Add New Task"
-      },
-      {
-        "command": "prd-manager.addTaskAtCursor",
-        "title": "PRD: Add Task Here"
-      },
-      {
-        "command": "prd-manager.addTaskToHeader",
-        "title": "PRD: Add Task to Header"
-      },
-      {
         "command": "prd-manager.copyTaskList",
         "title": "PRD: Copy Task List"
-      },
-      {
-        "command": "prd-manager.assignTask",
-        "title": "PRD: Assign Task"
-      },
-      {
-        "command": "prd-manager.copyDeepLink",
-        "title": "PRD: Copy Deep Link"
       },
       {
         "command": "prd-manager.openPrdFile",
@@ -55,8 +35,49 @@
         "icon": "$(file)"
       },
       {
+        "command": "prd-manager.copyHeaderTasks",
+        "title": "PRD: Copy All Task IDs"
+      },
+      {
+        "command": "prd-manager.copyHeaderTasksContext",
+        "title": "Copy All Task IDs"
+      },
+      {
+        "command": "prd-manager.fixDuplicates",
+        "title": "PRD: Fix Duplicate Task IDs"
+      },
+      {
+        "command": "prd-manager.toggleTask",
+        "title": "Toggle Task"
+      },
+      {
+        "command": "prd-manager.addTaskAtCursor",
+        "title": "Add Task Here"
+      },
+      {
+        "command": "prd-manager.addTaskToHeader",
+        "title": "Add Task"
+      },
+      {
+        "command": "prd-manager.addTaskToTask",
+        "title": "Add Subtask"
+      },
+      {
+        "command": "prd-manager.toggleCollapseExpand",
+        "title": "Toggle Collapse/Expand",
+        "icon": "$(collapse-all)"
+      },
+      {
+        "command": "prd-manager.assignTask",
+        "title": "Assign Task"
+      },
+      {
+        "command": "prd-manager.copyDeepLink",
+        "title": "Copy Deep Link"
+      },
+      {
         "command": "prd-manager.refreshTasks",
-        "title": "PRD: Refresh Tasks",
+        "title": "Refresh Tasks",
         "icon": "$(refresh)"
       },
       {
@@ -73,8 +94,19 @@
         "title": "Copy Task Text"
       },
       {
-        "command": "prd-manager.copyHeaderTasks",
-        "title": "Copy All Task IDs"
+        "command": "prd-manager.filterAllTasks",
+        "title": "Show All Tasks",
+        "icon": "$(list-flat)"
+      },
+      {
+        "command": "prd-manager.filterCompletedTasks",
+        "title": "Show Completed Tasks",
+        "icon": "$(pass)"
+      },
+      {
+        "command": "prd-manager.filterUncompletedTasks",
+        "title": "Show Uncompleted Tasks",
+        "icon": "$(circle-large-outline)"
       },
       {
         "command": "prd-manager.goToHeader",
@@ -98,6 +130,72 @@
       }
     ],
     "menus": {
+      "commandPalette": [
+        {
+          "command": "prd-manager.toggleTask",
+          "when": "false"
+        },
+        {
+          "command": "prd-manager.addTaskAtCursor",
+          "when": "false"
+        },
+        {
+          "command": "prd-manager.addTaskToHeader",
+          "when": "false"
+        },
+        {
+          "command": "prd-manager.assignTask",
+          "when": "false"
+        },
+        {
+          "command": "prd-manager.copyDeepLink",
+          "when": "false"
+        },
+        {
+          "command": "prd-manager.refreshTasks",
+          "when": "false"
+        },
+        {
+          "command": "prd-manager.goToTask",
+          "when": "false"
+        },
+        {
+          "command": "prd-manager.copyTaskId",
+          "when": "false"
+        },
+        {
+          "command": "prd-manager.copyTaskText",
+          "when": "false"
+        },
+        {
+          "command": "prd-manager.filterAllTasks",
+          "when": "false"
+        },
+        {
+          "command": "prd-manager.filterCompletedTasks",
+          "when": "false"
+        },
+        {
+          "command": "prd-manager.filterUncompletedTasks",
+          "when": "false"
+        },
+        {
+          "command": "prd-manager.goToHeader",
+          "when": "false"
+        },
+        {
+          "command": "prd-manager.copyHeaderTasksContext",
+          "when": "false"
+        },
+        {
+          "command": "prd-manager.addTaskToTask",
+          "when": "false"
+        },
+        {
+          "command": "prd-manager.toggleCollapseExpand",
+          "when": "false"
+        }
+      ],
       "view/title": [
         {
           "command": "prd-manager.openPrdFile",
@@ -108,6 +206,26 @@
           "command": "prd-manager.refreshTasks",
           "when": "view == prdExplorer",
           "group": "navigation@2"
+        },
+        {
+          "command": "prd-manager.filterAllTasks",
+          "when": "view == prdExplorer",
+          "group": "1_filter@1"
+        },
+        {
+          "command": "prd-manager.filterCompletedTasks",
+          "when": "view == prdExplorer",
+          "group": "1_filter@2"
+        },
+        {
+          "command": "prd-manager.filterUncompletedTasks",
+          "when": "view == prdExplorer",
+          "group": "1_filter@3"
+        },
+        {
+          "command": "prd-manager.toggleCollapseExpand",
+          "when": "view == prdExplorer",
+          "group": "navigation@3"
         }
       ],
       "view/item/context": [
@@ -142,9 +260,19 @@
           "group": "2_copy@3"
         },
         {
-          "command": "prd-manager.copyHeaderTasks",
+          "command": "prd-manager.addTaskToTask",
+          "when": "view == prdExplorer && viewItem == prdTaskWithChildren",
+          "group": "1_modification@3"
+        },
+        {
+          "command": "prd-manager.addTaskToHeader",
           "when": "view == prdExplorer && viewItem == prdHeader",
-          "group": "1_copy@1"
+          "group": "1_modification@1"
+        },
+        {
+          "command": "prd-manager.copyHeaderTasksContext",
+          "when": "view == prdExplorer && viewItem == prdHeader",
+          "group": "2_copy@1"
         },
         {
           "command": "prd-manager.goToHeader",
@@ -202,6 +330,12 @@
           "type": "boolean",
           "default": true,
           "description": "Make task IDs clickable"
+        },
+        "prdManager.taskFilter": {
+          "type": "string",
+          "enum": ["all", "completed", "uncompleted"],
+          "default": "all",
+          "description": "Filter tasks in the explorer"
         }
       }
     },

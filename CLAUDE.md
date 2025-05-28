@@ -77,3 +77,13 @@ This is a VSCode extension for managing Product Requirements Documents (PRDs) wi
 - The extension targets VSCode API 1.54.0+ (verify compatibility when using newer APIs)
 - Use ES2022 features as configured in tsconfig.json
 - Follow the existing modular structure when adding new providers/features
+
+### Menu Synchronization
+
+**IMPORTANT**: Keep PRD Tasks explorer context menus synchronized with CodeLens actions. When adding new actions to CodeLens providers, ensure they are also available in the tree view context menus and vice versa.
+
+Current synchronized actions:
+- **Tasks**: Toggle, Assign, Copy Link, Copy ID, Copy Text
+- **Headers**: Add Task, Copy Uncompleted Task List, Go to Header
+
+Both interfaces should provide the same core functionality to maintain consistency across the extension.

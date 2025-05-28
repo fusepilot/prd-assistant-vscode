@@ -20,7 +20,6 @@ export class PrdDecorationProvider implements vscode.Disposable {
         });
 
         this.completedTaskDecorationType = vscode.window.createTextEditorDecorationType({
-            textDecoration: 'line-through',
             opacity: '0.7'
         });
 

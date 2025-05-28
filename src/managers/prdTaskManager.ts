@@ -25,10 +25,19 @@ export class PrdTaskManager {
         const lines = content.split('\n');
         let modified = false;
         let currentHeaders: { level: number; text: string; line: number }[] = [];
+        const seenIds = new Set<string>();
 
         // Clear existing tasks for this document
         const existingTasks = this.tasks.get(document.uri.toString()) || [];
         existingTasks.forEach(task => this.taskById.delete(task.id));
+
+        // Get all existing IDs from other documents
+        const existingIdsFromOtherDocs = new Set<string>();
+        this.tasks.forEach((tasks, uri) => {
+            if (uri !== document.uri.toString()) {
+                tasks.forEach(task => existingIdsFromOtherDocs.add(task.id));
+            }
+        });
 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
@@ -51,8 +60,12 @@ export class PrdTaskManager {
                 const [, indent, bullet, checked, text, assignee, existingId] = match;
                 let taskId = existingId;
 
-                // Generate ID if missing
-                if (!taskId && this.getConfig('autoGenerateIds')) {
+                // Check for duplicate IDs but don't fix them here - let fixDuplicatesWithUndo handle it
+                if (taskId && (seenIds.has(taskId) || existingIdsFromOtherDocs.has(taskId))) {
+                    // Skip duplicate tasks during processing
+                    continue;
+                } else if (!taskId && this.getConfig('autoGenerateIds')) {
+                    // Generate ID if missing
                     taskId = this.generateTaskId();
                     // Preserve the original bullet type
                     lines[i] = `${indent}${bullet} [${checked}] ${text}${assignee ? ` @${assignee}` : ''} <!-- ${taskId} -->`;
@@ -60,6 +73,7 @@ export class PrdTaskManager {
                 }
 
                 if (taskId) {
+                    seenIds.add(taskId);
                     const task: PrdTask = {
                         id: taskId,
                         text: text.trim(),
@@ -87,6 +101,7 @@ export class PrdTaskManager {
             edit.replace(document.uri, fullRange, lines.join('\n'));
             await vscode.workspace.applyEdit(edit);
             this.isProcessing = false;
+
         }
 
         // Build task hierarchy based on indentation
@@ -216,9 +231,42 @@ export class PrdTaskManager {
         const taskId = this.generateTaskId();
         const taskLine = `- [ ] ${taskText}${assignee ? ` @${assignee}` : ''} <!-- ${taskId} -->`;
 
+        // Check if we should add empty line before the task
+        const currentLine = editor.document.lineAt(line).text;
+        const currentLineIsEmpty = currentLine.trim() === '';
+        const currentLineIsTask = currentLine.match(/^\s*(-|\*|\d+\.)\s+\[[ x]\]/);
+        const currentLineIsHeader = currentLine.match(/^#{1,6}\s+/);
+        
+        let shouldAddEmptyLineBefore = false;
+        if (!currentLineIsEmpty && !currentLineIsTask && !currentLineIsHeader) {
+            shouldAddEmptyLineBefore = true;
+        }
+
+        // Check if we should add empty line after the task
+        const nextLineExists = line + 1 < editor.document.lineCount;
+        let shouldAddEmptyLineAfter = false;
+        
+        if (nextLineExists) {
+            const nextLine = editor.document.lineAt(line + 1).text;
+            const nextLineIsEmpty = nextLine.trim() === '';
+            const nextLineIsTask = nextLine.match(/^\s*(-|\*|\d+\.)\s+\[[ x]\]/);
+            const nextLineIsHeader = nextLine.match(/^#{1,6}\s+/);
+            
+            // Add empty line if next line is not empty, not a task, not a header, and not already an empty line
+            shouldAddEmptyLineAfter = !nextLineIsEmpty && !nextLineIsTask && !nextLineIsHeader;
+        }
+        
+        let textToInsert = taskLine + '\n';
+        if (shouldAddEmptyLineBefore) {
+            textToInsert = '\n' + textToInsert;
+        }
+        if (shouldAddEmptyLineAfter) {
+            textToInsert = textToInsert + '\n';
+        }
+
         this.isProcessing = true;
         const edit = new vscode.WorkspaceEdit();
-        edit.insert(editor.document.uri, new vscode.Position(line + 1, 0), taskLine + '\n');
+        edit.insert(editor.document.uri, new vscode.Position(line + 1, 0), textToInsert);
         await vscode.workspace.applyEdit(edit);
         this.isProcessing = false;
     }
@@ -228,9 +276,42 @@ export class PrdTaskManager {
         const taskId = this.generateTaskId();
         const taskLine = `- [ ] ${taskText}${assignee ? ` @${assignee}` : ''} <!-- ${taskId} -->`;
 
+        // Check if we should add empty line before the task
+        const currentLine = editor.document.lineAt(line).text;
+        const currentLineIsEmpty = currentLine.trim() === '';
+        const currentLineIsTask = currentLine.match(/^\s*(-|\*|\d+\.)\s+\[[ x]\]/);
+        const currentLineIsHeader = currentLine.match(/^#{1,6}\s+/);
+        
+        let shouldAddEmptyLineBefore = false;
+        if (!currentLineIsEmpty && !currentLineIsTask && !currentLineIsHeader) {
+            shouldAddEmptyLineBefore = true;
+        }
+
+        // Check if we should add empty line after the task
+        const nextLineExists = line + 1 < editor.document.lineCount;
+        let shouldAddEmptyLineAfter = false;
+        
+        if (nextLineExists) {
+            const nextLine = editor.document.lineAt(line + 1).text;
+            const nextLineIsEmpty = nextLine.trim() === '';
+            const nextLineIsTask = nextLine.match(/^\s*(-|\*|\d+\.)\s+\[[ x]\]/);
+            const nextLineIsHeader = nextLine.match(/^#{1,6}\s+/);
+            
+            // Add empty line if next line is not empty, not a task, not a header, and not already an empty line
+            shouldAddEmptyLineAfter = !nextLineIsEmpty && !nextLineIsTask && !nextLineIsHeader;
+        }
+        
+        let textToInsert = taskLine + '\n';
+        if (shouldAddEmptyLineBefore) {
+            textToInsert = '\n' + textToInsert;
+        }
+        if (shouldAddEmptyLineAfter) {
+            textToInsert = textToInsert + '\n';
+        }
+
         this.isProcessing = true;
         const edit = new vscode.WorkspaceEdit();
-        edit.insert(editor.document.uri, new vscode.Position(line + 1, 0), taskLine + '\n');
+        edit.insert(editor.document.uri, new vscode.Position(line + 1, 0), textToInsert);
         await vscode.workspace.applyEdit(edit);
         this.isProcessing = false;
     }
@@ -286,16 +367,49 @@ export class PrdTaskManager {
         // Determine where and how to insert
         if (insertLine === headerLine) {
             // Insert right after header with a blank line
-            edit.insert(document.uri, new vscode.Position(headerLine + 1, 0), '\n' + taskLine + '\n');
+            edit.insert(document.uri, new vscode.Position(headerLine + 1, 0), '\n' + taskLine + '\n\n');
         } else {
             // Insert after the last relevant line
             const insertAfterLine = lines[insertLine];
+            const nextLineExists = insertLine + 1 < lines.length;
+            const nextLineIsEmpty = nextLineExists ? lines[insertLine + 1].trim() === '' : false;
+            
+            // Check if we need to add empty line before the task
+            const insertAfterLineIsTask = insertAfterLine.match(/^\s*(-|\*|\d+\.)\s+\[[ x]\]/);
+            const insertAfterLineIsHeader = insertAfterLine.match(/^#{1,6}\s+/);
+            const insertAfterLineIsEmpty = insertAfterLine.trim() === '';
+            
+            let shouldAddEmptyLineBefore = false;
+            if (!insertAfterLineIsEmpty && !insertAfterLineIsTask && !insertAfterLineIsHeader) {
+                shouldAddEmptyLineBefore = true;
+            }
+            
+            // Check if we need to add empty line after the task
+            let shouldAddEmptyLineAfter = false;
+            if (nextLineExists && !nextLineIsEmpty) {
+                const nextLine = lines[insertLine + 1];
+                const nextLineIsTask = nextLine.match(/^\s*(-|\*|\d+\.)\s+\[[ x]\]/);
+                const nextLineIsHeader = nextLine.match(/^#{1,6}\s+/);
+                shouldAddEmptyLineAfter = !nextLineIsTask && !nextLineIsHeader;
+            }
+            
             if (insertAfterLine.trim() !== '') {
-                // Add newline before task if the line isn't empty
-                edit.insert(document.uri, new vscode.Position(insertLine + 1, 0), taskLine + '\n');
+                // Build the text to insert
+                let textToInsert = taskLine + '\n';
+                if (shouldAddEmptyLineBefore) {
+                    textToInsert = '\n' + textToInsert;
+                }
+                if (shouldAddEmptyLineAfter) {
+                    textToInsert = textToInsert + '\n';
+                }
+                edit.insert(document.uri, new vscode.Position(insertLine + 1, 0), textToInsert);
             } else {
                 // Replace empty line
-                edit.replace(document.uri, new vscode.Range(insertLine, 0, insertLine + 1, 0), taskLine + '\n');
+                let textToInsert = taskLine + '\n';
+                if (shouldAddEmptyLineAfter) {
+                    textToInsert = textToInsert + '\n';
+                }
+                edit.replace(document.uri, new vscode.Range(insertLine, 0, insertLine + 1, 0), textToInsert);
             }
         }
         
@@ -414,21 +528,279 @@ export class PrdTaskManager {
         return this.taskById.get(taskId);
     }
 
-    private generateTaskId(): string {
-        // Use timestamp + counter to ensure uniqueness
-        const timestamp = Date.now().toString().slice(-6);
-        const paddedCounter = this.idCounter.toString().padStart(3, '0');
-        this.idCounter = (this.idCounter + 1) % 1000; // Reset after 999
+    async checkForDuplicates(document: vscode.TextDocument): Promise<boolean> {
+        const lines = document.getText().split('\n');
+        const seenIds = new Set<string>();
+        const existingIdsFromOtherDocs = new Set<string>();
         
-        // Take last 3 digits of timestamp and append counter
-        const id = `PRD-${timestamp.slice(-3)}${paddedCounter}`;
+        // Get all existing IDs from other documents
+        this.tasks.forEach((tasks, uri) => {
+            if (uri !== document.uri.toString()) {
+                tasks.forEach(task => existingIdsFromOtherDocs.add(task.id));
+            }
+        });
+
+        for (const line of lines) {
+            const match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(?:<!--\s*(PRD-\d{6})\s*-->)?$/);
+            
+            if (match) {
+                const [, , , , , , taskId] = match;
+                
+                if (taskId && (seenIds.has(taskId) || existingIdsFromOtherDocs.has(taskId))) {
+                    return true; // Found a duplicate
+                } else if (taskId) {
+                    seenIds.add(taskId);
+                }
+            }
+        }
+
+        return false; // No duplicates found
+    }
+
+    async fixDuplicatesWithUndo(editor: vscode.TextEditor): Promise<void> {
+        const document = editor.document;
+        const lines = document.getText().split('\n');
+        const seenIds = new Set<string>();
+        const existingIdsFromOtherDocs = new Set<string>();
+        const duplicates: { line: number; oldId: string; newId: string; fullLine: string }[] = [];
         
-        // Ensure uniqueness
-        if (this.taskById.has(id)) {
+        // Get all existing IDs from other documents
+        this.tasks.forEach((tasks, uri) => {
+            if (uri !== document.uri.toString()) {
+                tasks.forEach(task => existingIdsFromOtherDocs.add(task.id));
+            }
+        });
+
+        // Find all duplicates
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            const match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(?:<!--\s*(PRD-\d{6})\s*-->)?$/);
+            
+            if (match) {
+                const [, indent, bullet, checked, text, assignee, taskId] = match;
+                
+                if (taskId && (seenIds.has(taskId) || existingIdsFromOtherDocs.has(taskId))) {
+                    // Found a duplicate
+                    const newTaskId = this.generateNextSequentialId(taskId, seenIds, existingIdsFromOtherDocs);
+                    const newLine = `${indent}${bullet} [${checked}] ${text}${assignee ? ` @${assignee}` : ''} <!-- ${newTaskId} -->`;
+                    
+                    duplicates.push({
+                        line: i,
+                        oldId: taskId,
+                        newId: newTaskId,
+                        fullLine: newLine
+                    });
+                    
+                    seenIds.add(newTaskId);
+                } else if (taskId) {
+                    seenIds.add(taskId);
+                }
+            }
+        }
+
+        // Fix duplicates using editor.edit to keep in same undo group
+        if (duplicates.length > 0) {
+            this.isProcessing = true;
+            
+            await editor.edit(editBuilder => {
+                duplicates.forEach(dup => {
+                    const range = new vscode.Range(dup.line, 0, dup.line, lines[dup.line].length);
+                    editBuilder.replace(range, dup.fullLine);
+                });
+            }, {
+                undoStopBefore: false,  // Don't create undo stop before this edit
+                undoStopAfter: false    // Don't create undo stop after this edit
+            });
+            
+            this.isProcessing = false;
+
+            // Show subtle notification
+            const plural = duplicates.length > 1 ? 's' : '';
+            vscode.window.showInformationMessage(
+                `Fixed ${duplicates.length} duplicate task ID${plural}`
+            );
+        }
+    }
+
+    private generateNextSequentialId(baseId: string, seenIds: Set<string>, existingIds: Set<string>): string {
+        // Extract the numeric part from the ID
+        const match = baseId.match(/^PRD-(\d+)$/);
+        if (!match) {
             return this.generateTaskId();
         }
         
-        return id;
+        let numericPart = parseInt(match[1], 10);
+        let attempts = 0;
+        const maxAttempts = 100;
+        
+        while (attempts < maxAttempts) {
+            numericPart++;
+            const newId = `PRD-${numericPart.toString().padStart(6, '0')}`;
+            
+            // Check if this ID is already in use anywhere
+            if (!this.taskById.has(newId) && !seenIds.has(newId) && !existingIds.has(newId)) {
+                return newId;
+            }
+            
+            attempts++;
+        }
+        
+        // Fallback to timestamp-based generation if we can't find a sequential ID
+        return this.generateTaskId();
+    }
+
+    async findDuplicateTaskIds(document: vscode.TextDocument): Promise<Map<string, number[]>> {
+        const duplicates = new Map<string, number[]>();
+        const seenIds = new Map<string, number[]>();
+        const lines = document.getText().split('\n');
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            const match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(?:<!--\s*(PRD-\d{6})\s*-->)?$/);
+            
+            if (match) {
+                const taskId = match[6];
+                if (taskId) {
+                    if (!seenIds.has(taskId)) {
+                        seenIds.set(taskId, []);
+                    }
+                    seenIds.get(taskId)!.push(i);
+                }
+            }
+        }
+        
+        // Find which IDs have multiple occurrences
+        for (const [taskId, lineNumbers] of seenIds) {
+            if (lineNumbers.length > 1) {
+                duplicates.set(taskId, lineNumbers);
+            }
+        }
+        
+        return duplicates;
+    }
+
+    async fixDuplicates(editor: vscode.TextEditor): Promise<void> {
+        const document = editor.document;
+        const lines = document.getText().split('\n');
+        const seenIds = new Set<string>();
+        const existingIdsFromOtherDocs = new Set<string>();
+        const duplicates: { line: number; oldId: string; newId: string; fullLine: string }[] = [];
+        
+        // Get all existing IDs from other documents
+        this.tasks.forEach((tasks, uri) => {
+            if (uri !== document.uri.toString()) {
+                tasks.forEach(task => existingIdsFromOtherDocs.add(task.id));
+            }
+        });
+
+        // Find all duplicates
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            const match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(?:<!--\s*(PRD-\d{6})\s*-->)?$/);
+            
+            if (match) {
+                const [, indent, bullet, checked, text, assignee, taskId] = match;
+                
+                if (taskId && (seenIds.has(taskId) || existingIdsFromOtherDocs.has(taskId))) {
+                    // Found a duplicate
+                    const newTaskId = this.generateNextSequentialId(taskId, seenIds, existingIdsFromOtherDocs);
+                    const newLine = `${indent}${bullet} [${checked}] ${text}${assignee ? ` @${assignee}` : ''} <!-- ${newTaskId} -->`;
+                    
+                    duplicates.push({
+                        line: i,
+                        oldId: taskId,
+                        newId: newTaskId,
+                        fullLine: newLine
+                    });
+                    
+                    seenIds.add(newTaskId);
+                } else if (taskId) {
+                    seenIds.add(taskId);
+                }
+            }
+        }
+
+        // Fix duplicates using editor.edit
+        if (duplicates.length > 0) {
+            this.isProcessing = true;
+            
+            await editor.edit(editBuilder => {
+                duplicates.forEach(dup => {
+                    const range = new vscode.Range(dup.line, 0, dup.line, lines[dup.line].length);
+                    editBuilder.replace(range, dup.fullLine);
+                });
+            });
+            
+            this.isProcessing = false;
+        }
+    }
+
+    private generateTaskId(): string {
+        // First try to use smart incremental ID based on highest existing ID
+        const smartId = this.generateIncrementalTaskId();
+        if (smartId) {
+            return smartId;
+        }
+        
+        // Fallback to timestamp-based generation
+        let attempts = 0;
+        const maxAttempts = 1000;
+        
+        while (attempts < maxAttempts) {
+            // Use timestamp + counter to ensure uniqueness
+            const timestamp = Date.now().toString();
+            const paddedCounter = this.idCounter.toString().padStart(3, '0');
+            this.idCounter = (this.idCounter + 1) % 1000; // Reset after 999
+            
+            // Take last 3 digits of timestamp and append counter
+            const id = `PRD-${timestamp.slice(-3)}${paddedCounter}`;
+            
+            // Ensure uniqueness across all tasks
+            if (!this.taskById.has(id)) {
+                return id;
+            }
+            
+            attempts++;
+            // Add small delay to ensure timestamp changes
+            if (attempts % 10 === 0) {
+                const now = Date.now();
+                while (Date.now() === now) {
+                    // Busy wait for 1ms
+                }
+            }
+        }
+        
+        // Fallback: use full timestamp if we can't find a unique ID
+        return `PRD-${Date.now()}`;
+    }
+
+    private generateIncrementalTaskId(): string | null {
+        // Find the highest numeric ID across all tasks
+        let highestId = 0;
+        
+        // Check all tasks in memory
+        for (const task of this.taskById.values()) {
+            const match = task.id.match(/^PRD-(\d+)$/);
+            if (match) {
+                const numericPart = parseInt(match[1], 10);
+                if (numericPart > highestId) {
+                    highestId = numericPart;
+                }
+            }
+        }
+        
+        // If we found any PRD-XXXXXX format IDs, increment from the highest
+        if (highestId > 0) {
+            const newId = `PRD-${(highestId + 1).toString().padStart(6, '0')}`;
+            return newId;
+        }
+        
+        // No PRD-XXXXXX format IDs found, start with PRD-000001
+        return 'PRD-100001';
+    }
+
+    public generateNewTaskId(): string {
+        return this.generateTaskId();
     }
 
     private getConfig<T>(key: string): T | undefined {

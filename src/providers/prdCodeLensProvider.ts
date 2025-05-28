@@ -105,8 +105,18 @@ export class PrdCodeLensProvider implements vscode.CodeLensProvider {
         })
       );
 
-      // Show subtask count if any
+      // Add subtask button and show subtask count if any
       if (task.children.length > 0) {
+        // Add subtask button
+        codeLenses.push(
+          new vscode.CodeLens(range, {
+            title: "➕ Add Subtask",
+            command: "prd-manager.addTaskToTask",
+            arguments: [task],
+          })
+        );
+        
+        // Show subtask count
         const completedSubtasks = task.children.filter((child) => child.completed).length;
         codeLenses.push(
           new vscode.CodeLens(range, {
