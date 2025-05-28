@@ -149,6 +149,10 @@
       {
         "command": "prd-manager.convertAllListItems",
         "title": "Convert All List Items to Tasks"
+      },
+      {
+        "command": "prd-manager.deconvertTask",
+        "title": "Deconvert"
       }
     ],
     "views": {
@@ -251,6 +255,10 @@
         },
         {
           "command": "prd-manager.convertAllListItems",
+          "when": "false"
+        },
+        {
+          "command": "prd-manager.deconvertTask",
           "when": "false"
         }
       ],

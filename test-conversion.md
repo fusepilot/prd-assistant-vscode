@@ -21,6 +21,7 @@ This document contains various markdown list items that can be converted to task
 
 - [ ] This is already a task PRD-123456
 - [x] This is a completed task PRD-789012
+- [ ] Task with assignee @john-copilot PRD-555555
 
 ## Mixed Content
 

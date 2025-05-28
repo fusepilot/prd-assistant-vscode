@@ -124,7 +124,7 @@ export class PrdCodeLensProvider implements vscode.CodeLensProvider {
             arguments: [task],
           })
         );
-        
+
         // Show subtask count
         const completedSubtasks = task.children.filter((child) => child.completed).length;
         codeLenses.push(
@@ -134,6 +134,15 @@ export class PrdCodeLensProvider implements vscode.CodeLensProvider {
           })
         );
       }
+
+      // Add deconvert button
+      codeLenses.push(
+        new vscode.CodeLens(range, {
+          title: "Deconvert",
+          command: "prd-manager.deconvertTask",
+          arguments: [task.id],
+        })
+      );
     }
 
     return codeLenses;

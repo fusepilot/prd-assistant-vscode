@@ -967,6 +967,48 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
 
+  // Register deconvert task command
+  context.subscriptions.push(
+    vscode.commands.registerCommand("prd-manager.deconvertTask", async (taskId: string) => {
+      if (!taskId) {
+        vscode.window.showErrorMessage("No task ID provided");
+        return;
+      }
+
+      const task = taskManager.getTaskById(taskId);
+      if (!task) {
+        vscode.window.showErrorMessage("Task not found");
+        return;
+      }
+
+      const document = await vscode.workspace.openTextDocument(task.document);
+      const editor = await vscode.window.showTextDocument(document);
+      const line = document.lineAt(task.line);
+      const lineText = line.text;
+
+      // Parse the task line to extract components
+      const taskMatch = lineText.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(PRD-\d{6})?$/);
+      if (taskMatch) {
+        const [, indent, , , taskText, assignee, ] = taskMatch;
+        
+        // Convert back to list item format, preserving assignee but removing checkbox and PRD ID
+        let newText = `${indent}- ${taskText}`;
+        if (assignee) {
+          newText += ` @${assignee}`;
+        }
+
+        const edit = new vscode.WorkspaceEdit();
+        edit.replace(task.document, line.range, newText);
+        await vscode.workspace.applyEdit(edit);
+
+        // Process the document to update task tracking
+        await taskManager.processDocument(document);
+        
+        vscode.window.showInformationMessage(`Converted task ${taskId} to list item`);
+      }
+    })
+  );
+
   // Register document formatting provider for markdown files
   // This will automatically work with "Format on Save" when enabled
   context.subscriptions.push(
