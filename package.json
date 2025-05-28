@@ -52,6 +52,16 @@
         "title": "PRD: Normalize Checkbox Formatting"
       },
       {
+        "command": "prd-manager.toggleCodeLens",
+        "title": "Toggle PRD CodeLens",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "prd-manager.toggleCodeLensOff",
+        "title": "Toggle PRD CodeLens",
+        "icon": "$(eye-closed)"
+      },
+      {
         "command": "prd-manager.toggleTask",
         "title": "Toggle Task"
       },
@@ -199,6 +209,14 @@
         {
           "command": "prd-manager.toggleCollapseExpand",
           "when": "false"
+        },
+        {
+          "command": "prd-manager.toggleCodeLens",
+          "when": "false"
+        },
+        {
+          "command": "prd-manager.toggleCodeLensOff",
+          "when": "false"
         }
       ],
       "view/title": [
@@ -306,6 +324,18 @@
           "when": "resourceExtname == .md",
           "group": "prd"
         }
+      ],
+      "editor/title": [
+        {
+          "command": "prd-manager.toggleCodeLens",
+          "when": "resourceExtname == .md && prdManager.codeLensEnabled",
+          "group": "navigation"
+        },
+        {
+          "command": "prd-manager.toggleCodeLensOff",
+          "when": "resourceExtname == .md && !prdManager.codeLensEnabled",
+          "group": "navigation"
+        }
       ]
     },
     "configuration": {
@@ -338,7 +368,11 @@
         },
         "prdManager.taskFilter": {
           "type": "string",
-          "enum": ["all", "completed", "uncompleted"],
+          "enum": [
+            "all",
+            "completed",
+            "uncompleted"
+          ],
           "default": "all",
           "description": "Filter tasks in the explorer"
         },

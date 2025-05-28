@@ -4,9 +4,18 @@ import { PrdTaskManager } from "../managers/prdTaskManager";
 export class PrdCodeLensProvider implements vscode.CodeLensProvider {
   private _onDidChangeCodeLenses = new vscode.EventEmitter<void>();
   public readonly onDidChangeCodeLenses = this._onDidChangeCodeLenses.event;
+  private _sessionEnabled = true;
 
   constructor(private taskManager: PrdTaskManager) {
     taskManager.onTasksChanged(() => this._onDidChangeCodeLenses.fire());
+  }
+
+  public setSessionEnabled(enabled: boolean): void {
+    this._sessionEnabled = enabled;
+  }
+
+  public refresh(): void {
+    this._onDidChangeCodeLenses.fire();
   }
 
   async provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.CodeLens[]> {
@@ -131,6 +140,7 @@ export class PrdCodeLensProvider implements vscode.CodeLensProvider {
   }
 
   private isEnabled(): boolean {
-    return vscode.workspace.getConfiguration("prdManager").get("showCodeLens", true);
+    const configEnabled = vscode.workspace.getConfiguration("prdManager").get("showCodeLens", true);
+    return configEnabled && this._sessionEnabled;
   }
 }

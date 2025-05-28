@@ -670,6 +670,33 @@ export function activate(context: vscode.ExtensionContext) {
         })
     );
 
+    // Session-only CodeLens toggle state
+    let codeLensEnabled = true;
+    
+    const updateCodeLensState = () => {
+        vscode.commands.executeCommand('setContext', 'prdManager.codeLensEnabled', codeLensEnabled);
+        // Update provider state and refresh
+        codeLensProvider.setSessionEnabled(codeLensEnabled);
+        codeLensProvider.refresh();
+    };
+    
+    updateCodeLensState();
+
+    // Add commands to toggle CodeLens (both on and off states)
+    context.subscriptions.push(
+        vscode.commands.registerCommand('prd-manager.toggleCodeLens', async () => {
+            codeLensEnabled = !codeLensEnabled;
+            updateCodeLensState();
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('prd-manager.toggleCodeLensOff', async () => {
+            codeLensEnabled = !codeLensEnabled;
+            updateCodeLensState();
+        })
+    );
+
     // Register document formatting provider for markdown files
     // This will automatically work with "Format on Save" when enabled
     context.subscriptions.push(
