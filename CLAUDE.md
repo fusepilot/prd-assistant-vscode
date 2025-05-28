@@ -101,7 +101,45 @@ You can also:
 **IMPORTANT**: Keep PRD Tasks explorer context menus synchronized with CodeLens actions. When adding new actions to CodeLens providers, ensure they are also available in the tree view context menus and vice versa.
 
 Current synchronized actions:
-- **Tasks**: Toggle, Assign, Copy Link, Copy ID, Copy Text
+- **Tasks**: Toggle, Assign, Copy Link, Copy ID, Copy Text, Deconvert
 - **Headers**: Add Task, Copy Uncompleted Task List, Go to Header
 
-Both interfaces should provide the same core functionality to maintain consistency across the extension.
+Both interfaces provide the same core functionality to maintain consistency across the extension.
+
+### MCP Server Integration
+
+The extension includes a built-in MCP (Model Context Protocol) server that allows AI assistants and Copilots to interact with PRD tasks:
+
+**Architecture**: The MCP server is bundled with the extension, not installed in user workspaces
+**Location**: `mcp-server/` directory within the extension installation
+**Build**: Run `npm run build` in the `mcp-server` directory during development
+**Auto-Start Behavior**:
+- MCP server automatically starts when the extension activates
+- If not built, it attempts to build the server automatically (dev mode only)
+- Status is shown in the VSCode status bar with click-to-toggle
+- Server runs from extension directory, operates on active workspace files
+
+**Commands Available**:
+- "PRD: Start MCP Server" - Manually starts the MCP server process
+- "PRD: Stop MCP Server" - Stops the MCP server process
+- "PRD: Toggle MCP Server" - Toggles server on/off (also available via status bar)
+- "PRD: List Tasks via MCP" - Demonstrates MCP task listing
+- "PRD: Create Task via MCP" - Demonstrates MCP task creation
+
+**MCP Tools Available**:
+- `list_tasks` - List tasks with filtering options
+- `toggle_task` - Toggle task completion status
+- `create_task` - Create new tasks with assignees
+- `assign_task` - Assign existing tasks to team members
+- `get_task` - Get detailed task information
+
+**Testing MCP Server**:
+```bash
+cd mcp-server
+npm install && npm run build
+npm test  # Basic functionality test
+npm run inspector  # Interactive MCP Inspector
+```
+
+**Integration with AI Assistants**:
+The MCP server enables AI assistants to read, modify, and create PRD tasks while maintaining consistency with the VSCode extension's task tracking system.

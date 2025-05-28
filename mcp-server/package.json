@@ -1,0 +1,36 @@
+{
+  "name": "prd-manager-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for PRD Manager task interaction",
+  "type": "module",
+  "main": "./build/index.js",
+  "bin": {
+    "prd-manager-mcp": "./build/index.js"
+  },
+  "scripts": {
+    "build": "tsc && chmod +x build/index.js",
+    "watch": "tsc --watch",
+    "start": "node build/index.js",
+    "dev": "npm run build && npm run start",
+    "inspector": "npx @modelcontextprotocol/inspector build/index.js",
+    "test": "npm run build && node test/test-server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@types/glob": "^8.1.0",
+    "glob": "^10.4.5",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "mcp",
+    "prd",
+    "task-management",
+    "vscode"
+  ],
+  "author": "PRD Manager",
+  "license": "MIT"
+}

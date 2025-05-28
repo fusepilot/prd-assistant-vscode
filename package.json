@@ -153,6 +153,32 @@
       {
         "command": "prd-manager.deconvertTask",
         "title": "Deconvert"
+      },
+      {
+        "command": "prd-manager.startMcpServer",
+        "title": "PRD: Start MCP Server",
+        "icon": "$(play)"
+      },
+      {
+        "command": "prd-manager.stopMcpServer",
+        "title": "PRD: Stop MCP Server",
+        "icon": "$(stop)"
+      },
+      {
+        "command": "prd-manager.mcpListTasks",
+        "title": "PRD: List Tasks via MCP"
+      },
+      {
+        "command": "prd-manager.mcpCreateTask",
+        "title": "PRD: Create Task via MCP"
+      },
+      {
+        "command": "prd-manager.debugMcpPath",
+        "title": "PRD: Debug MCP Path"
+      },
+      {
+        "command": "prd-manager.toggleMcpServer",
+        "title": "PRD: Toggle MCP Server"
       }
     ],
     "views": {
@@ -292,6 +318,16 @@
           "command": "prd-manager.toggleCollapseExpand",
           "when": "view == prdExplorer",
           "group": "navigation@3"
+        },
+        {
+          "command": "prd-manager.startMcpServer",
+          "when": "view == prdExplorer",
+          "group": "2_mcp@1"
+        },
+        {
+          "command": "prd-manager.stopMcpServer",
+          "when": "view == prdExplorer",
+          "group": "2_mcp@2"
         }
       ],
       "view/item/context": [

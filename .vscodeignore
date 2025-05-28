@@ -9,3 +9,15 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 **/.vscode-test.*
+
+# MCP Server - include build files
+!mcp-server/build/**
+!mcp-server/package.json
+!mcp-server/package-lock.json
+
+# MCP Server - exclude source files
+mcp-server/src/**
+mcp-server/test/**
+mcp-server/tsconfig.json
+mcp-server/node_modules/**
+mcp-server/README.md

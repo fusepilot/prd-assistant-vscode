@@ -6,12 +6,22 @@ import { PrdDecorationProvider } from "./providers/prdDecorationProvider";
 import { PrdTaskManager } from "./managers/prdTaskManager";
 import { PrdCheckboxProvider } from "./providers/prdCheckboxProvider";
 import { PrdConversionCodeLensProvider } from "./providers/prdConversionCodeLensProvider";
+import { McpService } from "./services/mcpService";
 
 export function activate(context: vscode.ExtensionContext) {
   console.log("PRD Manager extension is now active!");
 
   // Initialize the task manager
   const taskManager = new PrdTaskManager();
+
+  // Initialize the MCP service and auto-start it
+  const mcpService = new McpService(taskManager, context);
+
+  // Auto-start MCP server when extension activates
+  mcpService.autoStart().catch((error) => {
+    console.error("Failed to auto-start MCP server:", error);
+    // Don't show error to user on startup, they can manually start if needed
+  });
 
   // Register tree view provider for sidebar
   const treeProvider = new PrdTreeProvider(taskManager);
@@ -828,7 +838,7 @@ export function activate(context: vscode.ExtensionContext) {
       await taskManager.processDocument(document);
 
       const edits: { line: number; newText: string }[] = [];
-      
+
       // Get the initial highest ID to start incrementing from
       const allTasks = taskManager.getAllTasks();
       let highestId = 100000; // Default starting ID
@@ -869,7 +879,7 @@ export function activate(context: vscode.ExtensionContext) {
 
           const indent = listItemMatch[1];
           // Generate sequential ID
-          const taskId = `PRD-${String(nextIdNumber).padStart(6, '0')}`;
+          const taskId = `PRD-${String(nextIdNumber).padStart(6, "0")}`;
           nextIdNumber++;
           const newText = `${indent}- [ ] ${content} ${taskId}`;
 
@@ -905,7 +915,7 @@ export function activate(context: vscode.ExtensionContext) {
       await taskManager.processDocument(document);
 
       const edits: { line: number; newText: string }[] = [];
-      
+
       // Get the initial highest ID to start incrementing from
       const allTasks = taskManager.getAllTasks();
       let highestId = 100000; // Default starting ID
@@ -941,7 +951,7 @@ export function activate(context: vscode.ExtensionContext) {
 
           const indent = listItemMatch[1];
           // Generate sequential ID
-          const taskId = `PRD-${String(nextIdNumber).padStart(6, '0')}`;
+          const taskId = `PRD-${String(nextIdNumber).padStart(6, "0")}`;
           nextIdNumber++;
           const newText = `${indent}- [ ] ${content} ${taskId}`;
 
@@ -989,8 +999,8 @@ export function activate(context: vscode.ExtensionContext) {
       // Parse the task line to extract components
       const taskMatch = lineText.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(PRD-\d{6})?$/);
       if (taskMatch) {
-        const [, indent, , , taskText, assignee, ] = taskMatch;
-        
+        const [, indent, , , taskText, assignee] = taskMatch;
+
         // Convert back to list item format, preserving assignee but removing checkbox and PRD ID
         let newText = `${indent}- ${taskText}`;
         if (assignee) {
@@ -1003,11 +1013,123 @@ export function activate(context: vscode.ExtensionContext) {
 
         // Process the document to update task tracking
         await taskManager.processDocument(document);
-        
+
         vscode.window.showInformationMessage(`Converted task ${taskId} to list item`);
       }
     })
   );
+
+  // Register MCP service commands
+  context.subscriptions.push(
+    vscode.commands.registerCommand("prd-manager.startMcpServer", async () => {
+      try {
+        await mcpService.start();
+        vscode.window.showInformationMessage("PRD MCP server started successfully");
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        vscode.window.showErrorMessage(`Failed to start MCP server: ${message}`);
+      }
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("prd-manager.debugMcpPath", () => {
+      const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+      const extensionPath = context.extensionPath;
+      const mcpServerPath = require("path").join(extensionPath, "mcp-server", "build", "index.js");
+
+      vscode.window.showInformationMessage(
+        `Extension Path: ${extensionPath}\n` + `MCP Server Path: ${mcpServerPath}\n` + `Workspace (PRD files): ${workspaceRoot || "No workspace"}`
+      );
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("prd-manager.stopMcpServer", () => {
+      mcpService.stop();
+      vscode.window.showInformationMessage("PRD MCP server stopped");
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("prd-manager.toggleMcpServer", async () => {
+      if (mcpService.isRunning()) {
+        mcpService.stop();
+        vscode.window.showInformationMessage("PRD MCP server stopped");
+      } else {
+        try {
+          await mcpService.start();
+          vscode.window.showInformationMessage("PRD MCP server started");
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          vscode.window.showErrorMessage(`Failed to start MCP server: ${message}`);
+        }
+      }
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("prd-manager.mcpListTasks", async () => {
+      if (!mcpService.isRunning()) {
+        vscode.window.showErrorMessage("PRD MCP server is not running. Start it first.");
+        return;
+      }
+
+      try {
+        const result = await mcpService.listTasks();
+        const doc = await vscode.workspace.openTextDocument({
+          content: result,
+          language: "markdown",
+        });
+        await vscode.window.showTextDocument(doc);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        vscode.window.showErrorMessage(`Failed to list tasks via MCP: ${message}`);
+      }
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("prd-manager.mcpCreateTask", async () => {
+      if (!mcpService.isRunning()) {
+        vscode.window.showErrorMessage("PRD MCP server is not running. Start it first.");
+        return;
+      }
+
+      const taskText = await vscode.window.showInputBox({
+        prompt: "Enter task description",
+        placeHolder: "Task description",
+      });
+
+      if (!taskText) {
+        return;
+      }
+
+      const assignee = await vscode.window.showInputBox({
+        prompt: "Assign to (optional)",
+        placeHolder: "@username-copilot",
+      });
+
+      try {
+        const result = await mcpService.createTask(taskText, assignee);
+        vscode.window.showInformationMessage(result);
+
+        // Refresh the task manager to reflect changes
+        const editor = vscode.window.activeTextEditor;
+        if (editor) {
+          await taskManager.processDocument(editor.document);
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        vscode.window.showErrorMessage(`Failed to create task via MCP: ${message}`);
+      }
+    })
+  );
+
+  // Clean up MCP service on deactivation
+  context.subscriptions.push({
+    dispose: () => mcpService.stop(),
+  });
 
   // Register document formatting provider for markdown files
   // This will automatically work with "Format on Save" when enabled

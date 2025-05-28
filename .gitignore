@@ -28,6 +28,16 @@ coverage/
 # TypeScript cache
 *.tsbuildinfo
 
+# Compiled files that shouldn't be in src
+src/**/*.js
+src/**/*.js.map
+src/**/*.d.ts
+
+# MCP server build (keep these)
+!mcp-server/build/**/*.js
+!mcp-server/build/**/*.js.map
+!mcp-server/build/**/*.d.ts
+
 # Package lock files (optional, if you don't want to commit them)
 # package-lock.json
 # yarn.lock

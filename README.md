@@ -38,10 +38,12 @@ Built-in Model Context Protocol server enables AI assistants to interact with yo
 Available MCP tools:
 
 - `list_tasks` - Query tasks with filters
-- `get_task` - Retrieve specific task details
-- `update_task` - Modify task status or assignee
+- `get_task` - Retrieve specific task details  
+- `toggle_task` - Toggle task completion status
 - `create_task` - Add new tasks programmatically
-- `get_progress` - Generate progress statistics
+- `assign_task` - Assign tasks to team members
+
+**Claude Code Integration**: See [CLAUDE_CODE_CONFIG.md](CLAUDE_CODE_CONFIG.md) for instructions on configuring Claude Code to use the MCP server.
 
 ### 📊 Visual Progress Tracking
 
