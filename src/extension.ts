@@ -652,6 +652,40 @@ export function activate(context: vscode.ExtensionContext) {
 
 
 
+    // Add command to normalize checkboxes
+    context.subscriptions.push(
+        vscode.commands.registerCommand('prd-manager.normalizeCheckboxes', async () => {
+            const editor = vscode.window.activeTextEditor;
+            if (editor && editor.document.languageId === 'markdown') {
+                const edits = await taskManager.normalizeCheckboxes(editor.document);
+                if (edits.length > 0) {
+                    const workspaceEdit = new vscode.WorkspaceEdit();
+                    edits.forEach(edit => {
+                        workspaceEdit.replace(editor.document.uri, edit.range, edit.newText);
+                    });
+                    await vscode.workspace.applyEdit(workspaceEdit);
+                    vscode.window.showInformationMessage('Normalized checkbox formatting');
+                }
+            }
+        })
+    );
+
+    // Register document formatting provider for markdown files
+    // This will automatically work with "Format on Save" when enabled
+    context.subscriptions.push(
+        vscode.languages.registerDocumentFormattingEditProvider('markdown', {
+            provideDocumentFormattingEdits(document: vscode.TextDocument): vscode.TextEdit[] {
+                // Check if checkbox normalization is enabled
+                const config = vscode.workspace.getConfiguration('prdManager');
+                if (!config.get<boolean>('normalizeCheckboxes', true)) {
+                    return [];
+                }
+                // Only normalize checkboxes, don't format other markdown content
+                return taskManager.normalizeCheckboxesSync(document);
+            }
+        })
+    );
+
     // Create diagnostic collection for duplicate warnings
     const diagnosticCollection = vscode.languages.createDiagnosticCollection('prd-duplicates');
     context.subscriptions.push(diagnosticCollection);

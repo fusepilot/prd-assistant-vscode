@@ -7,7 +7,8 @@
     "vscode": "^1.100.0"
   },
   "categories": [
-    "Other"
+    "Other",
+    "Formatters"
   ],
   "activationEvents": [
     "onLanguage:markdown",
@@ -45,6 +46,10 @@
       {
         "command": "prd-manager.fixDuplicates",
         "title": "PRD: Fix Duplicate Task IDs"
+      },
+      {
+        "command": "prd-manager.normalizeCheckboxes",
+        "title": "PRD: Normalize Checkbox Formatting"
       },
       {
         "command": "prd-manager.toggleTask",
@@ -336,6 +341,11 @@
           "enum": ["all", "completed", "uncompleted"],
           "default": "all",
           "description": "Filter tasks in the explorer"
+        },
+        "prdManager.normalizeCheckboxes": {
+          "type": "boolean",
+          "default": true,
+          "description": "Normalize checkbox formatting ([] -> [ ], [x ] -> [x]) when formatting"
         }
       }
     },

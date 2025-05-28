@@ -8,32 +8,32 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
 # Development mode with auto-recompilation
-npm run watch
+pnpm run watch
 
 # Type checking
-npm run check-types
+pnpm run check-types
 
 # Lint code
-npm run lint
+pnpm run lint
 
 # Full build (type-check, lint, and bundle)
-npm run compile
+pnpm run compile
 
 # Production build with minification
-npm run package
+pnpm run package
 ```
 
 ### Testing
 
 ```bash
 # Run tests (compiles and lints first)
-npm test
+pnpm test
 
 # Pre-test preparation
-npm run pretest
+pnpm run pretest
 ```
 
 ### Running the Extension
@@ -62,6 +62,7 @@ This is a VSCode extension for managing Product Requirements Documents (PRDs) wi
 6. **Tree View**: Provide sidebar explorer showing task hierarchy and progress
 7. **CodeLens**: Add inline actions and statistics above tasks
 8. **Progress Reporting**: Generate completion statistics and export capabilities
+9. **Checkbox Normalization**: Automatically fix checkbox formatting on save ([] → [ ], [x ] → [x])
 
 ### Extension API Patterns
 
@@ -70,6 +71,7 @@ This is a VSCode extension for managing Product Requirements Documents (PRDs) wi
 - Use `vscode.languages.registerDocumentLinkProvider` for deep links
 - Use `vscode.workspace.onDidChangeTextDocument` for real-time updates
 - Use `vscode.languages.registerCompletionItemProvider` for @-mention autocomplete
+- Use `vscode.languages.registerDocumentFormattingEditProvider` for checkbox normalization on format
 
 ### Development Notes
 
@@ -77,6 +79,22 @@ This is a VSCode extension for managing Product Requirements Documents (PRDs) wi
 - The extension targets VSCode API 1.54.0+ (verify compatibility when using newer APIs)
 - Use ES2022 features as configured in tsconfig.json
 - Follow the existing modular structure when adding new providers/features
+
+### Checkbox Normalization
+
+The extension provides automatic checkbox normalization to fix improperly formatted checkboxes:
+- `[]` → `[ ]` (adds space for empty checkbox)
+- `[x ]`, `[ x]`, `[ x ]` → `[x]` (normalizes checked checkbox)
+
+To enable automatic normalization on save:
+1. Open VSCode Settings (Cmd+,)
+2. Search for "Format On Save"
+3. Enable "Editor: Format On Save"
+4. The extension will automatically normalize checkboxes when you save markdown files
+
+You can also:
+- Use the command "PRD: Normalize Checkbox Formatting" to manually normalize
+- Disable normalization by setting `prdManager.normalizeCheckboxes` to false
 
 ### Menu Synchronization
 
