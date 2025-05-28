@@ -54,7 +54,7 @@ export class PrdCodeLensProvider implements vscode.CodeLensProvider {
         // Add "Add Task" button
         codeLenses.push(
           new vscode.CodeLens(range, {
-            title: "➕ Add Task",
+            title: "Add Task",
             command: "prd-manager.addTaskToHeader",
             arguments: [i, level, headerText],
           })
@@ -64,7 +64,7 @@ export class PrdCodeLensProvider implements vscode.CodeLensProvider {
         if (tasksUnderHeader.length > 0) {
           codeLenses.push(
             new vscode.CodeLens(range, {
-              title: "📋 Copy Uncompleted Task List",
+              title: "Copy Uncompleted Task List",
               command: "prd-manager.copyTaskList",
               arguments: [tasksUnderHeader],
             })
@@ -81,7 +81,7 @@ export class PrdCodeLensProvider implements vscode.CodeLensProvider {
       // Toggle task action
       codeLenses.push(
         new vscode.CodeLens(range, {
-          title: task.completed ? "✓ Completed" : "○ Mark Complete",
+          title: task.completed ? "Completed" : "Mark Complete",
           command: "prd-manager.toggleTask",
           arguments: [task.id],
         })
@@ -99,7 +99,7 @@ export class PrdCodeLensProvider implements vscode.CodeLensProvider {
       // Copy link action
       codeLenses.push(
         new vscode.CodeLens(range, {
-          title: "🔗 Copy Link",
+          title: "Copy Link",
           command: "prd-manager.copyDeepLink",
           arguments: [task.id],
         })
@@ -110,7 +110,7 @@ export class PrdCodeLensProvider implements vscode.CodeLensProvider {
         // Add subtask button
         codeLenses.push(
           new vscode.CodeLens(range, {
-            title: "➕ Add Subtask",
+            title: "Add Subtask",
             command: "prd-manager.addTaskToTask",
             arguments: [task],
           })
