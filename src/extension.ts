@@ -4,7 +4,6 @@ import { PrdDocumentLinkProvider } from "./providers/prdDocumentLinkProvider";
 import { PrdCodeLensProvider } from "./providers/prdCodeLensProvider";
 import { PrdDecorationProvider } from "./providers/prdDecorationProvider";
 import { PrdTaskManager } from "./managers/prdTaskManager";
-import { PrdCheckboxProvider } from "./providers/prdCheckboxProvider";
 import { PrdConversionCodeLensProvider } from "./providers/prdConversionCodeLensProvider";
 import { PrdQuickFixProvider } from "./providers/prdQuickFixProvider";
 import { isPrdFile, getPrdFilePatterns } from "./utils/prdUtils";
@@ -51,9 +50,6 @@ export function activate(context: vscode.ExtensionContext) {
     treeViewReady = true;
   }, 500);
 
-  // Register checkbox click handler
-  const checkboxProvider = new PrdCheckboxProvider(taskManager);
-  context.subscriptions.push(checkboxProvider);
 
   // Register document link provider for deep linking
   const linkProvider = new PrdDocumentLinkProvider();
@@ -537,6 +533,7 @@ export function activate(context: vscode.ExtensionContext) {
       vscode.window.showInformationMessage("PRD Tasks refreshed");
     })
   );
+
 
   context.subscriptions.push(
     vscode.commands.registerCommand("prd-manager.filterAllTasks", async () => {

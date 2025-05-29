@@ -59,6 +59,7 @@ export class PrdCodeLensProvider implements vscode.CodeLensProvider {
               command: "",
             })
           );
+          
         }
 
         // Add "Add Task" button
@@ -69,6 +70,7 @@ export class PrdCodeLensProvider implements vscode.CodeLensProvider {
             arguments: [i, level, headerText],
           })
         );
+        
 
         // Add copy task list button if there are tasks
         if (tasksUnderHeader.length > 0) {
@@ -79,6 +81,7 @@ export class PrdCodeLensProvider implements vscode.CodeLensProvider {
               arguments: [tasksUnderHeader],
             })
           );
+          
         }
       }
     }
@@ -97,6 +100,7 @@ export class PrdCodeLensProvider implements vscode.CodeLensProvider {
           arguments: [task.id],
         })
       );
+      
 
       // Assign task action
       codeLenses.push(
@@ -106,6 +110,7 @@ export class PrdCodeLensProvider implements vscode.CodeLensProvider {
           arguments: [task.id],
         })
       );
+      
 
       // Copy link action
       codeLenses.push(
@@ -115,6 +120,7 @@ export class PrdCodeLensProvider implements vscode.CodeLensProvider {
           arguments: [task.id],
         })
       );
+      
 
       // Add subtask button and show subtask count if any
       if (task.children.length > 0) {
@@ -126,6 +132,7 @@ export class PrdCodeLensProvider implements vscode.CodeLensProvider {
             arguments: [task],
           })
         );
+        
 
         // Show subtask count
         const completedSubtasks = task.children.filter((child) => child.completed).length;
@@ -135,6 +142,7 @@ export class PrdCodeLensProvider implements vscode.CodeLensProvider {
             command: "",
           })
         );
+        
       }
 
       // Add deconvert button
@@ -145,6 +153,7 @@ export class PrdCodeLensProvider implements vscode.CodeLensProvider {
           arguments: [task.id],
         })
       );
+      
       }
     }
 

@@ -56,40 +56,39 @@ Current challenges with PRD management:
 
 ### 1. Enhanced Markdown Editing
 
-- [ ] Interactive checkboxes for task completion @vscode-team PRD-100007
-  - [ ] Click to toggle checkbox state PRD-100008
-  - [ ] Keyboard shortcut support (Ctrl+Enter) PRD-100009
-  - [ ] Visual feedback on state change PRD-100010
-- [ ] Automatic ID generation for tasks @backend-team PRD-100011
-  - [ ] Format: PRD-XXXXXX (6-digit timestamp) PRD-100012
-  - [ ] Ensure uniqueness across document PRD-100013
-  - [ ] Preserve existing IDs on save PRD-100014
-- [ ] Syntax highlighting @frontend-team PRD-100015
-  - [ ] Highlight task checkboxes PRD-100016
+- [x] Interactive checkboxes for task completion @vscode-team PRD-100007
+  - [x] Keyboard shortcut support (Ctrl+Enter) PRD-100009
+  - [x] Visual feedback on state change PRD-100010
+- [x] Automatic ID generation for tasks @backend-team PRD-100011
+  - [x] Format: PRD-XXXXXX (6-digit sequential) PRD-100012
+  - [x] Ensure uniqueness across document PRD-100013
+  - [x] Preserve existing IDs on save PRD-100014
+- [x] Syntax highlighting @frontend-team PRD-100015
+  - [x] Highlight task checkboxes PRD-100016
   - [x] Highlight assignee mentions (@username-copilot) PRD-100017
-  - [ ] Highlight PRD IDs as links PRD-100018
+  - [x] Highlight PRD IDs as links PRD-100018
 
 ### 2. Task Assignment System
 
-- [ ] Assignee syntax (@username-copilot) @product-team PRD-100019
-  - [ ] Autocomplete for assignee names PRD-100020
-  - [ ] Visual indicator for assigned tasks PRD-100021
-  - [ ] Bulk reassignment capability PRD-100022
-- [ ] Assignment tracking @backend-team PRD-100023
-  - [ ] Track assignment history PRD-100024
-  - [ ] Show unassigned tasks PRD-100025
-  - [ ] Filter by assignee PRD-100026
+- [x] Assignee syntax (@username-copilot) @product-team PRD-100019
+  - [x] Autocomplete for assignee names PRD-100020
+  - [x] Visual indicator for assigned tasks PRD-100021
+  - [x] Bulk reassignment capability PRD-100022
+- [x] Assignment tracking @backend-team PRD-100023
+  - [x] Track assignment history PRD-100024
+  - [x] Show unassigned tasks PRD-100025
+  - [x] Filter by assignee PRD-100026
 
 ### 3. Deep Linking System
 
-- [ ] Unique ID per task @backend-team PRD-100027
-  - [ ] Generate on task creation PRD-100028
-  - [ ] Maintain ID persistence PRD-100029
-  - [ ] Support manual ID override PRD-100030
-- [ ] Clickable references @frontend-team PRD-100031
-  - [ ] Jump to task on click PRD-100032
-  - [ ] Show task preview on hover PRD-100033
-  - [ ] Copy deep link command PRD-100034
+- [x] Unique ID per task @backend-team PRD-100027
+  - [x] Generate on task creation PRD-100028
+  - [x] Maintain ID persistence PRD-100029
+  - [x] Support manual ID override PRD-100030
+- [x] Clickable references @frontend-team PRD-100031
+  - [x] Jump to task on click PRD-100032
+  - [x] Show task preview on hover PRD-100033
+  - [x] Copy deep link command PRD-100034
 - [ ] Cross-file linking @backend-team PRD-100035
   - [ ] Resolve links across workspace PRD-100036
   - [ ] Handle missing references gracefully PRD-100037
@@ -112,31 +111,62 @@ Current challenges with PRD management:
 
 ### 5. Visual Features
 
-- [ ] Tree View Explorer @frontend-team PRD-100051
-  - [ ] Hierarchical task display PRD-100052
-  - [ ] Group by file/assignee/status PRD-100053
-  - [ ] Search and filter PRD-100054
-  - [ ] Inline actions (toggle/assign) PRD-100055
-- [ ] CodeLens integration @frontend-team PRD-100056
-  - [ ] Show task actions above each line PRD-100057
-  - [ ] Display completion statistics PRD-100058
-  - [ ] Quick assign/reassign PRD-100059
-- [ ] Progress indicators @frontend-team PRD-100060
-  - [ ] File-level progress percentage PRD-100061
-  - [ ] Assignee workload view PRD-100062
-  - [ ] Mini progress bars PRD-100063
+- [x] Tree View Explorer @frontend-team PRD-100051
+  - [x] Hierarchical task display PRD-100052
+  - [x] Group by file/assignee/status PRD-100053
+  - [x] Search and filter PRD-100054
+  - [x] Inline actions (toggle/assign) PRD-100055
+- [x] CodeLens integration @frontend-team PRD-100056
+  - [x] Show task actions above each line PRD-100057
+  - [x] Display completion statistics PRD-100058
+  - [x] Quick assign/reassign PRD-100059
+- [x] Progress indicators @frontend-team PRD-100060
+  - [x] File-level progress percentage PRD-100061
+  - [x] Assignee workload view PRD-100062
+  - [x] Mini progress bars PRD-100063
 
 ### 6. Reporting & Analytics
 
-- [ ] Progress report generation @analytics-team PRD-100064
-  - [ ] Overall completion percentage PRD-100065
-  - [ ] By-assignee breakdown PRD-100066
-  - [ ] By-feature breakdown PRD-100067
+- [x] Progress report generation @analytics-team PRD-100064
+  - [x] Overall completion percentage PRD-100065
+  - [x] By-assignee breakdown PRD-100066
+  - [x] By-feature breakdown PRD-100067
   - [ ] Timeline/burndown chart PRD-100068
-- [ ] Export capabilities @backend-team PRD-100069
-  - [ ] Export to Markdown report PRD-100070
-  - [ ] Export to CSV PRD-100071
-  - [ ] Export to JSON PRD-100072
+- [x] Export capabilities @backend-team PRD-100069
+  - [x] Export to Markdown report PRD-100070
+  - [x] Export to CSV PRD-100071
+  - [x] Export to JSON PRD-100072
+
+### 7. Advanced Task Management
+
+- [x] Duplicate ID detection @backend-team PRD-100126
+  - [x] Visual warnings for duplicate IDs PRD-100127
+  - [x] Quick Fix actions to auto-increment PRD-100128
+  - [x] Real-time validation during editing PRD-100129
+- [x] List item conversion @frontend-team PRD-100130
+  - [x] Convert regular list items to tasks PRD-100131
+  - [x] Bulk conversion for sections PRD-100132
+  - [x] Preserve formatting and indentation PRD-100133
+- [x] Task deconversion @frontend-team PRD-100134
+  - [x] Convert tasks back to list items PRD-100135
+  - [x] Remove task IDs and assignees PRD-100136
+  - [x] Maintain document structure PRD-100137
+
+### 8. Enhanced User Experience
+
+- [x] Configurable file patterns @ux-team PRD-100138
+  - [x] Custom patterns for PRD file recognition PRD-100139
+  - [x] Case-insensitive matching PRD-100140
+  - [x] Multiple pattern support PRD-100141
+- [x] Granular feature toggles @ux-team PRD-100142
+  - [x] Toggle CodeLens for headers separately PRD-100143
+  - [x] Toggle CodeLens for tasks separately PRD-100144
+  - [x] Toggle conversion CodeLens PRD-100145
+  - [x] Toggle decorations and progress indicators PRD-100146
+- [x] Session management @ux-team PRD-100147
+  - [x] Per-session CodeLens visibility toggle PRD-100148
+  - [x] Context-aware UI elements PRD-100149
+  - [x] Smart feature activation based on file type PRD-100150
 
 ## Technical Requirements
 
