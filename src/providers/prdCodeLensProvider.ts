@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { PrdTaskManager } from "../managers/prdTaskManager";
+import { isPrdFile } from "../utils/prdUtils";
 
 export class PrdCodeLensProvider implements vscode.CodeLensProvider {
   private _onDidChangeCodeLenses = new vscode.EventEmitter<void>();
@@ -19,7 +20,7 @@ export class PrdCodeLensProvider implements vscode.CodeLensProvider {
   }
 
   async provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.CodeLens[]> {
-    if (!this.isEnabled()) {
+    if (!this.isEnabled() || !isPrdFile(document)) {
       return [];
     }
 
@@ -32,7 +33,7 @@ export class PrdCodeLensProvider implements vscode.CodeLensProvider {
       const line = lines[i];
       const headerMatch = line.match(/^(#{1,6})\s+(.+)$/);
 
-      if (headerMatch) {
+      if (headerMatch && this.isHeaderCodeLensEnabled()) {
         const level = headerMatch[1].length;
         const headerText = headerMatch[2];
         const range = new vscode.Range(i, 0, i, line.length);
@@ -83,12 +84,13 @@ export class PrdCodeLensProvider implements vscode.CodeLensProvider {
     }
 
     // Process individual tasks
-    for (const task of tasks) {
-      const line = document.lineAt(task.line);
-      const range = new vscode.Range(line.range.start, line.range.end);
+    if (this.isTaskCodeLensEnabled()) {
+      for (const task of tasks) {
+        const line = document.lineAt(task.line);
+        const range = new vscode.Range(line.range.start, line.range.end);
 
-      // Toggle task action
-      codeLenses.push(
+        // Toggle task action
+        codeLenses.push(
         new vscode.CodeLens(range, {
           title: task.completed ? "Completed" : "Mark Complete",
           command: "prd-manager.toggleTask",
@@ -143,6 +145,7 @@ export class PrdCodeLensProvider implements vscode.CodeLensProvider {
           arguments: [task.id],
         })
       );
+      }
     }
 
     return codeLenses;
@@ -151,5 +154,15 @@ export class PrdCodeLensProvider implements vscode.CodeLensProvider {
   private isEnabled(): boolean {
     const configEnabled = vscode.workspace.getConfiguration("prdManager").get("showCodeLens", true);
     return configEnabled && this._sessionEnabled;
+  }
+  
+  private isHeaderCodeLensEnabled(): boolean {
+    const config = vscode.workspace.getConfiguration("prdManager");
+    return config.get<boolean>("enableCodeLensForHeaders", true);
+  }
+  
+  private isTaskCodeLensEnabled(): boolean {
+    const config = vscode.workspace.getConfiguration("prdManager");
+    return config.get<boolean>("enableCodeLensForTasks", true);
   }
 }

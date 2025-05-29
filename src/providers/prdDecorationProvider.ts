@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { isPrdFile } from '../utils/prdUtils';
 
 export class PrdDecorationProvider implements vscode.Disposable {
     private assigneeDecorationType: vscode.TextEditorDecorationType;
@@ -48,7 +49,17 @@ export class PrdDecorationProvider implements vscode.Disposable {
     }
 
     private updateDecorations(editor: vscode.TextEditor): void {
-        if (editor.document.languageId !== 'markdown') {
+        const config = vscode.workspace.getConfiguration('prdManager');
+        const enableDecorations = config.get<boolean>('enableDecorations', true);
+        
+        if (!enableDecorations) {
+            // Clear all decorations
+            editor.setDecorations(this.assigneeDecorationType, []);
+            editor.setDecorations(this.taskIdDecorationType, []);
+            editor.setDecorations(this.completedTaskDecorationType, []);
+            return;
+        }
+        if (editor.document.languageId !== 'markdown' || !isPrdFile(editor.document)) {
             return;
         }
 

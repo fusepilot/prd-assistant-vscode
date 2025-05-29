@@ -376,12 +376,12 @@
       "editor/title": [
         {
           "command": "prd-manager.toggleCodeLens",
-          "when": "resourceExtname == .md && prdManager.codeLensEnabled",
+          "when": "resourceExtname == .md && prdManager.codeLensEnabled && prdManager.isPrdFile",
           "group": "navigation"
         },
         {
           "command": "prd-manager.toggleCodeLensOff",
-          "when": "resourceExtname == .md && !prdManager.codeLensEnabled",
+          "when": "resourceExtname == .md && !prdManager.codeLensEnabled && prdManager.isPrdFile",
           "group": "navigation"
         }
       ]
@@ -396,8 +396,14 @@
         },
         "prdManager.idFormat": {
           "type": "string",
-          "default": "PRD-{timestamp}",
-          "description": "Format for auto-generated IDs"
+          "default": "sequential",
+          "enum": ["sequential", "timestamp"],
+          "enumDescriptions": [
+            "Sequential IDs: PREFIX-100001, PREFIX-100002, etc. (recommended)",
+            "Timestamp-based IDs: PREFIX-XXXYYY where XXX is last 3 digits of timestamp and YYY is a counter"
+          ],
+          "description": "ID generation strategy for new tasks",
+          "markdownDescription": "Choose how task IDs are generated:\n- **Sequential**: Creates IDs like `PRD-100001`, `PRD-100002`, etc. Automatically increments from the highest existing ID.\n- **Timestamp**: Creates IDs based on current timestamp for guaranteed uniqueness.\n\nThe prefix can be customized using the `taskIdPrefix` setting."
         },
         "prdManager.showCodeLens": {
           "type": "boolean",
@@ -428,6 +434,67 @@
           "type": "boolean",
           "default": true,
           "description": "Normalize checkbox formatting ([] -> [ ], [x ] -> [x]) when formatting"
+        },
+        "prdManager.filePatterns": {
+          "type": "array",
+          "default": [
+            "*prd*.md",
+            "PRD*.md",
+            "*PRD*.md"
+          ],
+          "description": "File name patterns to identify PRD files (case-insensitive)",
+          "markdownDescription": "Glob patterns to identify PRD files. Default patterns match files containing 'PRD' or 'prd' in the filename."
+        },
+        "prdManager.enableCodeLensForHeaders": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show completion stats and 'Add Task' buttons on headers"
+        },
+        "prdManager.enableCodeLensForTasks": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show action buttons (Toggle, Assign, Copy) on tasks"
+        },
+        "prdManager.enableConversionCodeLens": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show 'Convert to Task' buttons on list items"
+        },
+        "prdManager.showProgressInTreeView": {
+          "type": "boolean",
+          "default": true,
+          "description": "Display completion percentage in the PRD Tasks explorer"
+        },
+        "prdManager.autoProcessDocuments": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically process PRD documents when opened or changed"
+        },
+        "prdManager.showDuplicateWarnings": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show warnings for duplicate task IDs"
+        },
+        "prdManager.enableQuickFixes": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable quick fixes for duplicate task IDs"
+        },
+        "prdManager.defaultAssignee": {
+          "type": "string",
+          "default": "",
+          "description": "Default assignee for new tasks (e.g., @username)"
+        },
+        "prdManager.taskIdPrefix": {
+          "type": "string",
+          "default": "PRD",
+          "description": "Prefix for generated task IDs",
+          "markdownDescription": "The prefix to use for all generated task IDs. For example:\n- `PRD` → PRD-100001\n- `TASK` → TASK-100001\n- `PROJ` → PROJ-100001"
+        },
+        "prdManager.enableDecorations": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable visual decorations for tasks and assignees"
         }
       }
     },
@@ -464,14 +531,18 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.100.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
+    "@types/vscode": "^1.100.0",
     "@typescript-eslint/eslint-plugin": "^8.31.1",
     "@typescript-eslint/parser": "^8.31.1",
-    "eslint": "^9.25.1",
-    "typescript": "^5.8.3",
     "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.5.2"
+    "@vscode/test-electron": "^2.5.2",
+    "eslint": "^9.25.1",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@types/minimatch": "^5.1.2",
+    "minimatch": "^9.0.5"
   }
 }

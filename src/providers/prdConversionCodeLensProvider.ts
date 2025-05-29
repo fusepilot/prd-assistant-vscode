@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { PrdTaskManager } from "../managers/prdTaskManager";
+import { isPrdFile } from "../utils/prdUtils";
 
 export class PrdConversionCodeLensProvider implements vscode.CodeLensProvider {
   private _onDidChangeCodeLenses = new vscode.EventEmitter<void>();
@@ -19,7 +20,7 @@ export class PrdConversionCodeLensProvider implements vscode.CodeLensProvider {
   }
 
   async provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.CodeLens[]> {
-    if (!this.isEnabled()) {
+    if (!this.isEnabled() || !isPrdFile(document)) {
       return [];
     }
 
@@ -151,6 +152,7 @@ export class PrdConversionCodeLensProvider implements vscode.CodeLensProvider {
 
   private isEnabled(): boolean {
     const configEnabled = vscode.workspace.getConfiguration("prdManager").get("showCodeLens", true);
-    return configEnabled && this._sessionEnabled;
+    const conversionEnabled = vscode.workspace.getConfiguration("prdManager").get("enableConversionCodeLens", true);
+    return configEnabled && conversionEnabled && this._sessionEnabled;
   }
 }

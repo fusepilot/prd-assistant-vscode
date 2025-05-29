@@ -6,12 +6,34 @@ import { PrdDecorationProvider } from "./providers/prdDecorationProvider";
 import { PrdTaskManager } from "./managers/prdTaskManager";
 import { PrdCheckboxProvider } from "./providers/prdCheckboxProvider";
 import { PrdConversionCodeLensProvider } from "./providers/prdConversionCodeLensProvider";
+import { PrdQuickFixProvider } from "./providers/prdQuickFixProvider";
+import { isPrdFile, getPrdFilePatterns } from "./utils/prdUtils";
 
 export function activate(context: vscode.ExtensionContext) {
   console.log("PRD Manager extension is now active!");
 
   // Initialize the task manager
   const taskManager = new PrdTaskManager();
+  
+  // Function to update context based on active editor
+  const updatePrdFileContext = (editor: vscode.TextEditor | undefined) => {
+    if (editor && editor.document) {
+      const isPrd = isPrdFile(editor.document);
+      vscode.commands.executeCommand('setContext', 'prdManager.isPrdFile', isPrd);
+    } else {
+      vscode.commands.executeCommand('setContext', 'prdManager.isPrdFile', false);
+    }
+  };
+  
+  // Set initial context
+  updatePrdFileContext(vscode.window.activeTextEditor);
+  
+  // Update context when active editor changes
+  context.subscriptions.push(
+    vscode.window.onDidChangeActiveTextEditor(editor => {
+      updatePrdFileContext(editor);
+    })
+  );
 
   // Register tree view provider for sidebar
   const treeProvider = new PrdTreeProvider(taskManager);
@@ -45,6 +67,12 @@ export function activate(context: vscode.ExtensionContext) {
   const conversionCodeLensProvider = new PrdConversionCodeLensProvider(taskManager);
   context.subscriptions.push(vscode.languages.registerCodeLensProvider({ scheme: "file", pattern: "**/*.md" }, conversionCodeLensProvider));
 
+  // Register Quick Fix provider for duplicate ID fixes
+  const quickFixProvider = new PrdQuickFixProvider(taskManager);
+  context.subscriptions.push(vscode.languages.registerCodeActionsProvider({ scheme: "file", pattern: "**/*.md" }, quickFixProvider, {
+    providedCodeActionKinds: PrdQuickFixProvider.providedCodeActionKinds
+  }));
+
   // Register decoration provider for visual enhancements
   const decorationProvider = new PrdDecorationProvider();
   context.subscriptions.push(decorationProvider);
@@ -53,7 +81,7 @@ export function activate(context: vscode.ExtensionContext) {
   const scanWorkspaceForPRDs = async () => {
     console.log("Scanning workspace for PRD files...");
     // Try multiple patterns to catch all PRD files
-    const patterns = ["**/*{PRD,prd}*.md", "**/PRD*.md", "**/prd*.md", "**/*PRD*.md", "**/*prd*.md"];
+    const patterns = getPrdFilePatterns();
 
     const allPrdFiles = new Set<string>();
     for (const pattern of patterns) {
@@ -1014,6 +1042,11 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.languages.registerDocumentFormattingEditProvider("markdown", {
       provideDocumentFormattingEdits(document: vscode.TextDocument): vscode.TextEdit[] {
+        // Only format PRD files
+        if (!isPrdFile(document)) {
+          return [];
+        }
+        
         // Check if checkbox normalization is enabled
         const config = vscode.workspace.getConfiguration("prdManager");
         if (!config.get<boolean>("normalizeCheckboxes", true)) {
@@ -1032,10 +1065,22 @@ export function activate(context: vscode.ExtensionContext) {
   // Watch for document changes to update task tracking and show duplicate warnings
   context.subscriptions.push(
     vscode.workspace.onDidChangeTextDocument(async (event) => {
-      if (event.document.languageId === "markdown" && event.contentChanges.length > 0) {
+      if (event.document.languageId === "markdown" && event.contentChanges.length > 0 && isPrdFile(event.document)) {
+        const config = vscode.workspace.getConfiguration("prdManager");
+        const autoProcess = config.get<boolean>("autoProcessDocuments", true);
+        const showWarnings = config.get<boolean>("showDuplicateWarnings", true);
+        
+        if (!autoProcess) {
+          return;
+        }
+        
         // Process document and check for duplicates
         setTimeout(async () => {
           await taskManager.processDocument(event.document);
+
+          if (!showWarnings) {
+            return;
+          }
 
           // Check for duplicates and show diagnostics
           const duplicates = await taskManager.findDuplicateTaskIds(event.document);
@@ -1064,8 +1109,8 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Process already opened documents
   vscode.workspace.textDocuments.forEach((doc) => {
-    if (doc.languageId === "markdown") {
-      console.log("Processing existing document:", doc.fileName);
+    if (doc.languageId === "markdown" && isPrdFile(doc)) {
+      console.log("Processing existing PRD document:", doc.fileName);
       taskManager.processDocument(doc);
     }
   });
@@ -1079,8 +1124,8 @@ export function activate(context: vscode.ExtensionContext) {
   // Process newly opened documents
   context.subscriptions.push(
     vscode.workspace.onDidOpenTextDocument((doc) => {
-      if (doc.languageId === "markdown") {
-        console.log("Processing newly opened document:", doc.fileName);
+      if (doc.languageId === "markdown" && isPrdFile(doc)) {
+        console.log("Processing newly opened PRD document:", doc.fileName);
         taskManager.processDocument(doc);
       }
     })

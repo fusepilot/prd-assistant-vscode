@@ -31,12 +31,17 @@ export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string
       item.resourceUri = element.uri;
       
       // Calculate document stats
-      const tasks = this.taskManager.getTasksByDocument(element.uri);
-      const rootTasks = tasks.filter(t => !t.parent);
-      const completedTasks = rootTasks.filter(t => t.completed).length;
-      if (rootTasks.length > 0) {
-        const percentage = Math.round((completedTasks / rootTasks.length) * 100);
-        item.description = `${completedTasks}/${rootTasks.length} (${percentage}%)`;
+      const config = vscode.workspace.getConfiguration("prdManager");
+      const showProgress = config.get<boolean>("showProgressInTreeView", true);
+      
+      if (showProgress) {
+        const tasks = this.taskManager.getTasksByDocument(element.uri);
+        const rootTasks = tasks.filter(t => !t.parent);
+        const completedTasks = rootTasks.filter(t => t.completed).length;
+        if (rootTasks.length > 0) {
+          const percentage = Math.round((completedTasks / rootTasks.length) * 100);
+          item.description = `${completedTasks}/${rootTasks.length} (${percentage}%)`;
+        }
       }
       
       // Add command to open the document
@@ -96,7 +101,10 @@ export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string
         });
       }
 
-      if (tasksUnderHeader.length > 0) {
+      const config = vscode.workspace.getConfiguration("prdManager");
+      const showProgress = config.get<boolean>("showProgressInTreeView", true);
+      
+      if (showProgress && tasksUnderHeader.length > 0) {
         const completedTasks = tasksUnderHeader.filter((t) => t.completed).length;
         const percentage = Math.round((completedTasks / tasksUnderHeader.length) * 100);
         item.description = `${completedTasks}/${tasksUnderHeader.length} (${percentage}%)`;

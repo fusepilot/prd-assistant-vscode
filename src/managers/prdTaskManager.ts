@@ -64,7 +64,9 @@ export class PrdTaskManager {
           // Remove all PRD IDs from the text
           cleanedRestOfLine = cleanedRestOfLine.replace(/PRD-\d{6}/g, '').trim();
           // Remove extra spaces that might be left behind
-          cleanedRestOfLine = cleanedRestOfLine.replace(/\s+/g, ' ').trim();
+          // Only normalize consecutive spaces between words, not within words
+          // This prevents breaking words that might have accidental spaces while typing
+          cleanedRestOfLine = cleanedRestOfLine.replace(/(\s)\s+/g, '$1').trim();
           // Add back only one ID at the end
           cleanedRestOfLine = `${cleanedRestOfLine} ${prdIds[0]}`;
         }
@@ -297,8 +299,13 @@ export class PrdTaskManager {
       const nextLineIsTask = nextLine.match(/^\s*(-|\*|\d+\.)\s+\[[ x]\]/);
       const nextLineIsHeader = nextLine.match(/^#{1,6}\s+/);
 
-      // Add empty line if next line is not empty, not a task, not a header, and not already an empty line
-      shouldAddEmptyLineAfter = !nextLineIsEmpty && !nextLineIsTask && !nextLineIsHeader;
+      // Add empty line if next line is not empty and not a task
+      // Always add empty line before headers to ensure proper spacing
+      if (nextLineIsHeader) {
+        shouldAddEmptyLineAfter = true;
+      } else {
+        shouldAddEmptyLineAfter = !nextLineIsEmpty && !nextLineIsTask;
+      }
     }
 
     let textToInsert = taskLine + "\n";
@@ -342,8 +349,13 @@ export class PrdTaskManager {
       const nextLineIsTask = nextLine.match(/^\s*(-|\*|\d+\.)\s+\[[ x]\]/);
       const nextLineIsHeader = nextLine.match(/^#{1,6}\s+/);
 
-      // Add empty line if next line is not empty, not a task, not a header, and not already an empty line
-      shouldAddEmptyLineAfter = !nextLineIsEmpty && !nextLineIsTask && !nextLineIsHeader;
+      // Add empty line if next line is not empty and not a task
+      // Always add empty line before headers to ensure proper spacing
+      if (nextLineIsHeader) {
+        shouldAddEmptyLineAfter = true;
+      } else {
+        shouldAddEmptyLineAfter = !nextLineIsEmpty && !nextLineIsTask;
+      }
     }
 
     let textToInsert = taskLine + "\n";
@@ -436,6 +448,15 @@ export class PrdTaskManager {
         const nextLineIsTask = nextLine.match(/^\s*(-|\*|\d+\.)\s+\[[ x]\]/);
         const nextLineIsHeader = nextLine.match(/^#{1,6}\s+/);
         shouldAddEmptyLineAfter = !nextLineIsTask && !nextLineIsHeader;
+      }
+      
+      // Special case: if we're inserting right before a section header, ensure empty line
+      if (foundNextSection && nextLineExists) {
+        const nextLine = lines[insertLine + 1];
+        const nextLineIsHeader = nextLine.match(/^#{1,6}\s+/);
+        if (nextLineIsHeader) {
+          shouldAddEmptyLineAfter = true;
+        }
       }
 
       if (insertAfterLine.trim() !== "") {
@@ -786,13 +807,18 @@ export class PrdTaskManager {
   }
 
   private generateTaskId(): string {
-    // First try to use smart incremental ID based on highest existing ID
-    const smartId = this.generateIncrementalTaskId();
-    if (smartId) {
-      return smartId;
+    const config = vscode.workspace.getConfiguration("prdManager");
+    const idFormat = config.get<string>("idFormat", "sequential");
+    
+    if (idFormat === "sequential") {
+      // First try to use smart incremental ID based on highest existing ID
+      const smartId = this.generateIncrementalTaskId();
+      if (smartId) {
+        return smartId;
+      }
     }
 
-    // Fallback to timestamp-based generation
+    // Use timestamp-based generation (either as primary method or fallback)
     let attempts = 0;
     const maxAttempts = 1000;
 
@@ -803,7 +829,9 @@ export class PrdTaskManager {
       this.idCounter = (this.idCounter + 1) % 1000; // Reset after 999
 
       // Take last 3 digits of timestamp and append counter
-      const id = `PRD-${timestamp.slice(-3)}${paddedCounter}`;
+      const config = vscode.workspace.getConfiguration("prdManager");
+      const prefix = config.get<string>("taskIdPrefix", "PRD");
+      const id = `${prefix}-${timestamp.slice(-3)}${paddedCounter}`;
 
       // Ensure uniqueness across all tasks
       if (!this.taskById.has(id)) {
@@ -830,7 +858,10 @@ export class PrdTaskManager {
 
     // Check all tasks in memory
     for (const task of this.taskById.values()) {
-      const match = task.id.match(/^PRD-(\d+)$/);
+      const config = vscode.workspace.getConfiguration("prdManager");
+      const prefix = config.get<string>("taskIdPrefix", "PRD");
+      const regex = new RegExp(`^${prefix}-(\\d+)$`);
+      const match = task.id.match(regex);
       if (match) {
         const numericPart = parseInt(match[1], 10);
         if (numericPart > highestId) {
@@ -841,12 +872,16 @@ export class PrdTaskManager {
 
     // If we found any PRD-XXXXXX format IDs, increment from the highest
     if (highestId > 0) {
-      const newId = `PRD-${(highestId + 1).toString().padStart(6, "0")}`;
+      const config = vscode.workspace.getConfiguration("prdManager");
+      const prefix = config.get<string>("taskIdPrefix", "PRD");
+      const newId = `${prefix}-${(highestId + 1).toString().padStart(6, "0")}`;
       return newId;
     }
 
-    // No PRD-XXXXXX format IDs found, start with PRD-000001
-    return "PRD-100001";
+    // No PRD-XXXXXX format IDs found, start with PRD-100001
+    const config = vscode.workspace.getConfiguration("prdManager");
+    const prefix = config.get<string>("taskIdPrefix", "PRD");
+    return `${prefix}-100001`;
   }
 
   public generateNewTaskId(): string {
@@ -891,7 +926,9 @@ export class PrdTaskManager {
           // Remove all PRD IDs from the text
           cleanedRestOfLine = cleanedRestOfLine.replace(/PRD-\d{6}/g, '').trim();
           // Remove extra spaces that might be left behind
-          cleanedRestOfLine = cleanedRestOfLine.replace(/\s+/g, ' ').trim();
+          // Only normalize consecutive spaces between words, not within words
+          // This prevents breaking words that might have accidental spaces while typing
+          cleanedRestOfLine = cleanedRestOfLine.replace(/(\s)\s+/g, '$1').trim();
           // Add back only one ID at the end
           cleanedRestOfLine = `${cleanedRestOfLine} ${prdIds[0]}`;
         }
