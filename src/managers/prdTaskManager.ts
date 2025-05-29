@@ -580,6 +580,107 @@ export class PrdTaskManager {
     return report;
   }
 
+  async generateProgressReportCsv(): Promise<string> {
+    const tasks = this.getAllTasks();
+    const headers = ['Task ID', 'Description', 'Completed', 'Assignee', 'File', 'Line', 'Headers'];
+    
+    // Escape CSV field if it contains comma, quote, or newline
+    const escapeCsvField = (field: string): string => {
+      if (field.includes(',') || field.includes('"') || field.includes('\n')) {
+        return `"${field.replace(/"/g, '""')}"`;
+      }
+      return field;
+    };
+
+    let csv = headers.join(',') + '\n';
+    
+    for (const task of tasks) {
+      const row = [
+        escapeCsvField(task.id),
+        escapeCsvField(task.text),
+        task.completed ? 'TRUE' : 'FALSE',
+        escapeCsvField(task.assignee || ''),
+        escapeCsvField(task.document ? task.document.fsPath : ''),
+        task.line.toString(),
+        escapeCsvField(task.headers ? task.headers.map(h => h.text).join(' > ') : '')
+      ];
+      csv += row.join(',') + '\n';
+    }
+
+    return csv;
+  }
+
+  async generateProgressReportJson(): Promise<string> {
+    const tasks = this.getAllTasks();
+    const totalTasks = tasks.length;
+    const completedTasks = tasks.filter(t => t.completed).length;
+    const tasksByAssignee = new Map<string, { total: number; completed: number; tasks: string[] }>();
+    const tasksByFile = new Map<string, { total: number; completed: number; tasks: string[] }>();
+
+    // Calculate statistics
+    tasks.forEach((task) => {
+      // By assignee
+      if (task.assignee) {
+        const stats = tasksByAssignee.get(task.assignee) || { total: 0, completed: 0, tasks: [] };
+        stats.total++;
+        stats.tasks.push(task.id);
+        if (task.completed) {
+          stats.completed++;
+        }
+        tasksByAssignee.set(task.assignee, stats);
+      }
+
+      // By file
+      if (task.document) {
+        const fileName = task.document.fsPath;
+        const stats = tasksByFile.get(fileName) || { total: 0, completed: 0, tasks: [] };
+        stats.total++;
+        stats.tasks.push(task.id);
+        if (task.completed) {
+          stats.completed++;
+        }
+        tasksByFile.set(fileName, stats);
+      }
+    });
+
+    const report = {
+      generated: new Date().toISOString(),
+      summary: {
+        totalTasks,
+        completedTasks,
+        remainingTasks: totalTasks - completedTasks,
+        completionPercentage: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
+      },
+      byAssignee: Array.from(tasksByAssignee.entries()).map(([assignee, stats]) => ({
+        assignee,
+        total: stats.total,
+        completed: stats.completed,
+        percentage: Math.round((stats.completed / stats.total) * 100),
+        taskIds: stats.tasks
+      })),
+      byFile: Array.from(tasksByFile.entries()).map(([file, stats]) => ({
+        file,
+        total: stats.total,
+        completed: stats.completed,
+        percentage: Math.round((stats.completed / stats.total) * 100),
+        taskIds: stats.tasks
+      })),
+      tasks: tasks.map(task => ({
+        id: task.id,
+        text: task.text,
+        completed: task.completed,
+        assignee: task.assignee || null,
+        file: task.document ? task.document.fsPath : null,
+        line: task.line,
+        headers: task.headers ? task.headers.map(h => ({ level: h.level, text: h.text, line: h.line })) : [],
+        children: task.children.map(child => child.id),
+        parent: task.parent || null
+      }))
+    };
+
+    return JSON.stringify(report, null, 2);
+  }
+
   getAllTasks(): PrdTask[] {
     const allTasks: PrdTask[] = [];
     this.tasks.forEach((tasks) => allTasks.push(...tasks));

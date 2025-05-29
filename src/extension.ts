@@ -155,6 +155,48 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
+    vscode.commands.registerCommand("prd-manager.exportReportCsv", async () => {
+      const csv = await taskManager.generateProgressReportCsv();
+      const defaultUri = vscode.Uri.file('prd-progress-report.csv');
+      
+      const uri = await vscode.window.showSaveDialog({
+        defaultUri,
+        filters: {
+          'CSV Files': ['csv'],
+          'All Files': ['*']
+        },
+        title: 'Export Progress Report as CSV'
+      });
+
+      if (uri) {
+        await vscode.workspace.fs.writeFile(uri, Buffer.from(csv, 'utf8'));
+        vscode.window.showInformationMessage(`Progress report exported to ${uri.fsPath}`);
+      }
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("prd-manager.exportReportJson", async () => {
+      const json = await taskManager.generateProgressReportJson();
+      const defaultUri = vscode.Uri.file('prd-progress-report.json');
+      
+      const uri = await vscode.window.showSaveDialog({
+        defaultUri,
+        filters: {
+          'JSON Files': ['json'],
+          'All Files': ['*']
+        },
+        title: 'Export Progress Report as JSON'
+      });
+
+      if (uri) {
+        await vscode.workspace.fs.writeFile(uri, Buffer.from(json, 'utf8'));
+        vscode.window.showInformationMessage(`Progress report exported to ${uri.fsPath}`);
+      }
+    })
+  );
+
+  context.subscriptions.push(
     vscode.commands.registerCommand("prd-manager.addTask", async () => {
       const editor = vscode.window.activeTextEditor;
       if (!editor) {

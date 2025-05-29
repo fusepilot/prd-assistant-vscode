@@ -26,7 +26,18 @@
       },
       {
         "command": "prd-manager.generateReport",
-        "title": "PRD: Generate Progress Report"
+        "title": "PRD: Generate Progress Report",
+        "icon": "$(file-text)"
+      },
+      {
+        "command": "prd-manager.exportReportCsv",
+        "title": "PRD: Export Progress Report (CSV)",
+        "icon": "$(export)"
+      },
+      {
+        "command": "prd-manager.exportReportJson",
+        "title": "PRD: Export Progress Report (JSON)",
+        "icon": "$(export)"
       },
       {
         "command": "prd-manager.copyTaskList",
@@ -272,6 +283,21 @@
           "command": "prd-manager.refreshTasks",
           "when": "view == prdExplorer",
           "group": "navigation@2"
+        },
+        {
+          "command": "prd-manager.generateReport",
+          "when": "view == prdExplorer",
+          "group": "export@1"
+        },
+        {
+          "command": "prd-manager.exportReportCsv",
+          "when": "view == prdExplorer",
+          "group": "export@2"
+        },
+        {
+          "command": "prd-manager.exportReportJson",
+          "when": "view == prdExplorer",
+          "group": "export@3"
         },
         {
           "command": "prd-manager.filterAllTasks",
