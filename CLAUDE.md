@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## General
+
+Do not use bash commands unless you're sure theres not a native tool for you to use that doesn't require explicit permission from me.
+
 ## Commands
 
 ### Build & Development
@@ -83,16 +87,19 @@ This is a VSCode extension for managing Product Requirements Documents (PRDs) wi
 ### Checkbox Normalization
 
 The extension provides automatic checkbox normalization to fix improperly formatted checkboxes:
+
 - `[]` → `[ ]` (adds space for empty checkbox)
 - `[x ]`, `[ x]`, `[ x ]` → `[x]` (normalizes checked checkbox)
 
 To enable automatic normalization on save:
+
 1. Open VSCode Settings (Cmd+,)
 2. Search for "Format On Save"
 3. Enable "Editor: Format On Save"
 4. The extension will automatically normalize checkboxes when you save markdown files
 
 You can also:
+
 - Use the command "PRD: Normalize Checkbox Formatting" to manually normalize
 - Disable normalization by setting `prdManager.normalizeCheckboxes` to false
 
@@ -101,6 +108,7 @@ You can also:
 **IMPORTANT**: Keep PRD Tasks explorer context menus synchronized with CodeLens actions. When adding new actions to CodeLens providers, ensure they are also available in the tree view context menus and vice versa.
 
 Current synchronized actions:
+
 - **Tasks**: Toggle, Assign, Copy Link, Copy ID, Copy Text
 - **Headers**: Add Task, Copy Uncompleted Task List, Go to Header
 

@@ -516,6 +516,79 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
+    vscode.commands.registerCommand("prd-manager.createPrdFile", async () => {
+      // Check if PRD.md already exists in workspace root
+      const workspaceFolders = vscode.workspace.workspaceFolders;
+      if (!workspaceFolders || workspaceFolders.length === 0) {
+        vscode.window.showErrorMessage("No workspace folder is open");
+        return;
+      }
+
+      const workspaceRoot = workspaceFolders[0].uri;
+      const prdFileUri = vscode.Uri.joinPath(workspaceRoot, "PRD.md");
+
+      try {
+        // Check if file already exists
+        await vscode.workspace.fs.stat(prdFileUri);
+        vscode.window.showInformationMessage("PRD.md already exists in workspace root");
+        
+        // Open the existing file
+        const doc = await vscode.workspace.openTextDocument(prdFileUri);
+        await vscode.window.showTextDocument(doc);
+        return;
+      } catch (error) {
+        // File doesn't exist, create it
+      }
+
+      // Create empty PRD file with basic template
+      const prdTemplate = `# Product Requirements Document
+
+## Overview
+Brief description of the product or feature.
+
+## Requirements
+
+### Functional Requirements
+- [ ] Requirement 1 PRD-100001
+- [ ] Requirement 2 PRD-100002
+
+### Technical Requirements
+- [ ] Technical requirement 1 PRD-100003
+- [ ] Technical requirement 2 PRD-100004
+
+## Tasks
+
+### Implementation
+- [ ] Task 1 PRD-100005
+- [ ] Task 2 PRD-100006
+
+### Testing
+- [ ] Test 1 PRD-100007
+- [ ] Test 2 PRD-100008
+
+## Notes
+Additional notes and considerations.
+`;
+
+      try {
+        await vscode.workspace.fs.writeFile(prdFileUri, Buffer.from(prdTemplate, 'utf8'));
+        
+        // Open the new file
+        const doc = await vscode.workspace.openTextDocument(prdFileUri);
+        await vscode.window.showTextDocument(doc);
+        
+        // Process the document to register tasks
+        await taskManager.processDocument(doc);
+        treeProvider.refresh();
+        
+        vscode.window.showInformationMessage("Created PRD.md in workspace root");
+      } catch (error) {
+        vscode.window.showErrorMessage(`Failed to create PRD.md: ${error}`);
+      }
+    })
+  );
+
+  context.subscriptions.push(
     vscode.commands.registerCommand("prd-manager.debugScan", async () => {
       console.log("=== DEBUG SCAN TRIGGERED ===");
       await scanWorkspaceForPRDs();

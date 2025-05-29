@@ -2,7 +2,30 @@
   "name": "prd-manager",
   "displayName": "PRD Manager",
   "description": "Transform your Product Requirements Documents into interactive, trackable project dashboards with AI assistant integration.",
-  "version": "0.0.1",
+  "version": "1.0.0",
+  "publisher": "prd-manager",
+  "author": "PRD Manager Team",
+  "license": "MIT",
+  "homepage": "https://github.com/prd-manager/prd-manager-vscode#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/prd-manager/prd-manager-vscode"
+  },
+  "bugs": {
+    "url": "https://github.com/prd-manager/prd-manager-vscode/issues"
+  },
+  "keywords": [
+    "prd",
+    "product-requirements",
+    "task-management",
+    "markdown",
+    "project-management",
+    "ai-integration",
+    "documentation",
+    "tracking",
+    "codelens",
+    "tree-view"
+  ],
   "engines": {
     "vscode": "^1.100.0"
   },
@@ -47,6 +70,11 @@
         "command": "prd-manager.openPrdFile",
         "title": "PRD: Open PRD File",
         "icon": "$(file)"
+      },
+      {
+        "command": "prd-manager.createPrdFile",
+        "title": "PRD: Create Empty PRD File",
+        "icon": "$(new-file)"
       },
       {
         "command": "prd-manager.copyHeaderTasks",
@@ -179,7 +207,7 @@
     "viewsWelcome": [
       {
         "view": "prdExplorer",
-        "contents": "No PRD files found.\n[Open PRD File](command:prd-manager.openPrdFile)"
+        "contents": "No PRD files found in workspace.\n[Create Empty PRD File](command:prd-manager.createPrdFile)\n[Open Existing PRD File](command:prd-manager.openPrdFile)"
       }
     ],
     "menus": {
@@ -275,14 +303,19 @@
       ],
       "view/title": [
         {
-          "command": "prd-manager.openPrdFile",
+          "command": "prd-manager.createPrdFile",
           "when": "view == prdExplorer",
           "group": "navigation@1"
         },
         {
-          "command": "prd-manager.refreshTasks",
+          "command": "prd-manager.openPrdFile",
           "when": "view == prdExplorer",
           "group": "navigation@2"
+        },
+        {
+          "command": "prd-manager.refreshTasks",
+          "when": "view == prdExplorer",
+          "group": "navigation@3"
         },
         {
           "command": "prd-manager.generateReport",
@@ -317,7 +350,7 @@
         {
           "command": "prd-manager.toggleCollapseExpand",
           "when": "view == prdExplorer",
-          "group": "navigation@3"
+          "group": "navigation@4"
         }
       ],
       "view/item/context": [
@@ -471,6 +504,15 @@
           "description": "File name patterns to identify PRD files (case-insensitive)",
           "markdownDescription": "Glob patterns to identify PRD files. Default patterns match files containing 'PRD' or 'prd' in the filename."
         },
+        "prdManager.additionalFiles": {
+          "type": "array",
+          "default": [],
+          "description": "Additional specific files to enhance with PRD Manager features",
+          "markdownDescription": "List of specific file paths to enhance with PRD Manager features. For example: `[\"CLAUDE.md\", \"TODO.md\", \"TASKS.md\"]`. These files will have all PRD Manager features enabled regardless of their naming pattern.",
+          "items": {
+            "type": "string"
+          }
+        },
         "prdManager.enableCodeLensForHeaders": {
           "type": "boolean",
           "default": true,
@@ -554,7 +596,16 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "package": "vsce package",
+    "package:pre": "vsce package --pre-release",
+    "publish": "vsce publish",
+    "publish:pre": "vsce publish --pre-release",
+    "publish:patch": "vsce publish patch",
+    "publish:minor": "vsce publish minor",
+    "publish:major": "vsce publish major",
+    "clean": "rm -rf out dist *.vsix",
+    "build:prod": "npm run clean && npm run compile && npm run package"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",

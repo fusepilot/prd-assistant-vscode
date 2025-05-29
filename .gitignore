@@ -35,3 +35,6 @@ coverage/
 # Misc
 *.log
 .idea/
+
+# Extension packaging
+*.vsix

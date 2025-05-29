@@ -137,6 +137,31 @@ prd-manager/
 
 ### Common Development Tasks
 
+**Available Scripts**
+
+```bash
+# Development
+npm run compile     # Build TypeScript
+npm run watch       # Watch mode for development
+npm run lint        # Run ESLint
+npm run test        # Run tests
+
+# Packaging & Publishing
+npm run package     # Create .vsix file for testing
+npm run package:pre # Create pre-release .vsix
+npm run build:prod  # Clean, compile, and package
+
+# Publishing (requires vsce login)
+npm run publish       # Publish current version
+npm run publish:patch # Bump patch version and publish (1.0.0 → 1.0.1)
+npm run publish:minor # Bump minor version and publish (1.0.0 → 1.1.0)
+npm run publish:major # Bump major version and publish (1.0.0 → 2.0.0)
+npm run publish:pre   # Publish as pre-release
+
+# Utilities
+npm run clean       # Remove build artifacts and .vsix files
+```
+
 **Watch Mode Development**
 
 ```bash
@@ -152,10 +177,11 @@ npm run watch-tests
 - Press `F5` to launch Extension Development Host
 - Or use "Debug: Start Debugging" from Command Palette
 
-**Run Tests**
+**Package for Testing**
 
 ```bash
-npm test
+npm run package
+# Creates prd-manager-1.0.0.vsix for local testing
 ```
 
 **Lint Code**
@@ -255,10 +281,13 @@ Configure PRD Manager through VSCode settings:
 - `prdManager.mcpServer.enabled`: Enable/disable MCP server for AI integration (default: `true`)
 - `prdManager.mcpServer.port`: Port for MCP server (default: `3000`)
 - `prdManager.autoGenerateIds`: Automatically generate task IDs (default: `true`)
-- `prdManager.idFormat`: Format for auto-generated IDs (default: `"PRD-{timestamp}"`)
+- `prdManager.idFormat`: ID generation strategy - `"sequential"` or `"timestamp"` (default: `"sequential"`)
 - `prdManager.showCodeLens`: Show inline task actions (default: `true`)
 - `prdManager.decorateAssignees`: Highlight @-mentions (default: `true`)
 - `prdManager.decorateDeepLinks`: Make task IDs clickable (default: `true`)
+- `prdManager.additionalFiles`: List of specific files to enhance with PRD Manager features (default: `[]`)
+  - Example: `["CLAUDE.md", "TODO.md", "TASKS.md"]`
+  - These files will have all PRD Manager features enabled regardless of their naming pattern
 
 ## 🐛 Known Issues
 
