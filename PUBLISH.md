@@ -64,16 +64,16 @@ The `vsce create-publisher` command is no longer available. You must create a pu
 
 ```json
 {
-  "publisher": "your-publisher-name",  // ← Add your publisher ID here
-  "icon": "images/icon.png",           // ← Ensure you have an icon (128x128px recommended)
+  "publisher": "your-publisher-name", // ← Add your publisher ID here
+  "icon": "images/icon.png", // ← Ensure you have an icon (128x128px recommended)
   "galleryBanner": {
-    "color": "#2C2C2C",               // ← Add banner color
+    "color": "#2C2C2C", // ← Add banner color
     "theme": "dark"
   },
   "categories": [
     "Other",
     "Formatters",
-    "Programming Languages"           // ← Add relevant categories
+    "Programming Languages" // ← Add relevant categories
   ]
 }
 ```
@@ -81,7 +81,9 @@ The `vsce create-publisher` command is no longer available. You must create a pu
 ### 2. Create/Update Required Files
 
 #### README.md
+
 Ensure your README.md includes:
+
 - Clear description of what the extension does
 - Features list with screenshots/GIFs
 - Installation instructions
@@ -91,12 +93,16 @@ Ensure your README.md includes:
 - Release notes
 
 #### CHANGELOG.md
+
 Document all changes for each version:
+
 ```markdown
 # Change Log
 
 ## [1.0.0] - 2024-01-XX
+
 ### Added
+
 - Initial release
 - Interactive checkbox management
 - Task ID generation
@@ -106,6 +112,7 @@ Document all changes for each version:
 ```
 
 #### Icon
+
 - Create a 128x128px PNG icon at `images/icon.png`
 - Use a clear, recognizable design
 - Ensure good contrast on both light and dark backgrounds
@@ -113,6 +120,7 @@ Document all changes for each version:
 ### 3. Add Screenshots
 
 Create a `images` folder with screenshots showing:
+
 - The extension in action
 - Tree view
 - CodeLens features
@@ -147,6 +155,7 @@ vsce ls-publishers
 ```
 
 If you get an error, make sure:
+
 - You're using the correct publisher ID (not display name)
 - Your PAT has the correct Marketplace scopes
 - The PAT hasn't expired
@@ -158,8 +167,8 @@ If you get an error, make sure:
 vsce publish
 
 # Publish with version increment
-vsce publish minor  # 1.0.0 → 1.1.0
 vsce publish patch  # 1.0.0 → 1.0.1
+vsce publish minor  # 1.0.0 → 1.1.0
 vsce publish major  # 1.0.0 → 2.0.0
 
 # Publish specific version
@@ -209,6 +218,7 @@ When making updates:
 ## Important Notes
 
 ### Do's
+
 - ✅ Test extension thoroughly before publishing
 - ✅ Include clear documentation
 - ✅ Respond to user feedback and issues
@@ -217,6 +227,7 @@ When making updates:
 - ✅ Include a license file
 
 ### Don'ts
+
 - ❌ Don't include sensitive information (tokens, passwords)
 - ❌ Don't include unnecessary files (use `.vscodeignore`)
 - ❌ Don't publish untested code
@@ -227,14 +238,17 @@ When making updates:
 ### Common Issues
 
 1. **"Missing publisher name"**
+
    - Add `"publisher": "your-name"` to package.json
 
 2. **"Personal Access Token verification failed"**
+
    - Ensure PAT has Marketplace scopes
    - Check token hasn't expired
    - Try creating a new token
 
 3. **"Icon not found"**
+
    - Ensure icon path in package.json is correct
    - Icon should be PNG format, 128x128px recommended
 
@@ -268,10 +282,11 @@ If you prefer not to use Azure DevOps, you can publish to [Open VSX Registry](ht
 1. Create an account at https://open-vsx.org/
 2. Generate an access token in your profile settings
 3. Publish using:
+
    ```bash
    # Install ovsx CLI
    npm install -g ovsx
-   
+
    # Publish to Open VSX
    ovsx publish -p <token>
    ```
