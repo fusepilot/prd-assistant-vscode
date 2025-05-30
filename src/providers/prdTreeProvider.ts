@@ -84,6 +84,7 @@ export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string
         headerLevel = headerPart.match(/^#+/)?.[0].length || 0;
         const documentTasks = this.taskManager.getTasksByDocument(documentUri);
         tasksUnderHeader = documentTasks.filter((task) => {
+          // Don't filter out child tasks - we want to count all tasks under this header
           if (task.headers && task.headers.length > 0) {
             return task.headers.some((h) => h.text === headerText && h.level === headerLevel);
           }
@@ -94,6 +95,7 @@ export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string
         headerLevel = element.match(/^#+/)?.[0].length || 0;
         const allTasks = this.taskManager.getAllTasks();
         tasksUnderHeader = allTasks.filter((task) => {
+          // Don't filter out child tasks - we want to count all tasks under this header
           if (task.headers && task.headers.length > 0) {
             return task.headers.some((h) => h.text === headerText && h.level === headerLevel);
           }
@@ -237,7 +239,32 @@ export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string
       return true;
     });
 
-    // Group tasks by their last header, preserving line order
+    // Build a map of all headers and their relationships
+    const headerHierarchy = new Map<string, Set<string>>();
+    const allHeaders = new Set<string>();
+    
+    documentTasks.forEach((task) => {
+      if (task.headers && task.headers.length > 0) {
+        for (let i = 0; i < task.headers.length; i++) {
+          const header = task.headers[i];
+          const headerKey = `${"#".repeat(header.level)} ${header.text}`;
+          allHeaders.add(headerKey);
+          
+          // Track parent-child relationships
+          if (i > 0) {
+            const parentHeader = task.headers[i - 1];
+            const parentKey = `${"#".repeat(parentHeader.level)} ${parentHeader.text}`;
+            
+            if (!headerHierarchy.has(parentKey)) {
+              headerHierarchy.set(parentKey, new Set());
+            }
+            headerHierarchy.get(parentKey)!.add(headerKey);
+          }
+        }
+      }
+    });
+
+    // Group tasks by their optimal header
     const headerGroups = new Map<string, {header: string, headerLine: number, tasks: PrdTask[]}>();
     
     filteredTasks.forEach((task) => {
@@ -245,9 +272,28 @@ export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string
       let headerLine = -1;
       
       if (task.headers && task.headers.length > 0) {
-        const lastHeader = task.headers[task.headers.length - 1];
-        headerKey = `${documentUri.toString()}::${"#".repeat(lastHeader.level)} ${lastHeader.text}`;
-        headerLine = lastHeader.line;
+        // Start with the most specific header
+        let selectedHeader = task.headers[task.headers.length - 1];
+        
+        // Check if we should use a parent header instead
+        for (let i = task.headers.length - 1; i > 0; i--) {
+          const currentHeader = task.headers[i];
+          const currentKey = `${"#".repeat(currentHeader.level)} ${currentHeader.text}`;
+          const parentHeader = task.headers[i - 1];
+          const parentKey = `${"#".repeat(parentHeader.level)} ${parentHeader.text}`;
+          
+          // If the parent has only one child (this header), use the parent instead
+          const siblings = headerHierarchy.get(parentKey) || new Set();
+          if (siblings.size === 1 && siblings.has(currentKey)) {
+            selectedHeader = parentHeader;
+          } else {
+            // Multiple siblings, stop here
+            break;
+          }
+        }
+        
+        headerKey = `${documentUri.toString()}::${"#".repeat(selectedHeader.level)} ${selectedHeader.text}`;
+        headerLine = selectedHeader.line;
       }
 
       if (!headerGroups.has(headerKey)) {
