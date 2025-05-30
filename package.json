@@ -209,7 +209,7 @@
     "viewsWelcome": [
       {
         "view": "prdExplorer",
-        "contents": "No PRD files found in workspace.\n[Create Empty PRD File](command:prd-assistant.createPrdFile)\n[Open Existing PRD File](command:prd-assistant.openPrdFile)"
+        "contents": "Scanning workspace for PRD files...\n\nIf no files are found after scanning:\n[Create Empty PRD File](command:prd-assistant.createPrdFile)\n[Open Existing PRD File](command:prd-assistant.openPrdFile)"
       }
     ],
     "menus": {
