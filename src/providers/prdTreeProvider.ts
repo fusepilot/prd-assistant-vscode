@@ -31,7 +31,7 @@ export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string
       item.resourceUri = element.uri;
       
       // Calculate document stats
-      const config = vscode.workspace.getConfiguration("prdManager");
+      const config = vscode.workspace.getConfiguration("prdAssistant");
       const showProgress = config.get<boolean>("showProgressInTreeView", true);
       
       if (showProgress) {
@@ -103,7 +103,7 @@ export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string
         });
       }
 
-      const config = vscode.workspace.getConfiguration("prdManager");
+      const config = vscode.workspace.getConfiguration("prdAssistant");
       const showProgress = config.get<boolean>("showProgressInTreeView", true);
       
       if (showProgress && tasksUnderHeader.length > 0) {
@@ -194,7 +194,7 @@ export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string
     } else {
       // Return children of the task, applying filter
       const task = element as PrdTask;
-      const filter = vscode.workspace.getConfiguration('prdManager').get<'all' | 'completed' | 'uncompleted'>('taskFilter', 'all');
+      const filter = vscode.workspace.getConfiguration('prdAssistant').get<'all' | 'completed' | 'uncompleted'>('taskFilter', 'all');
       
       let filteredChildren = task.children;
       if (filter === 'completed') {
@@ -224,7 +224,7 @@ export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string
     const documentTasks = this.taskManager.getTasksByDocument(documentUri);
     
     // Get current filter setting
-    const filter = vscode.workspace.getConfiguration('prdManager').get<'all' | 'completed' | 'uncompleted'>('taskFilter', 'all');
+    const filter = vscode.workspace.getConfiguration('prdAssistant').get<'all' | 'completed' | 'uncompleted'>('taskFilter', 'all');
 
     console.log("Getting root elements for document:", documentUri.fsPath, "total tasks:", documentTasks.length, "filter:", filter);
 
@@ -354,7 +354,7 @@ export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string
     const tasks = documentUri ? this.taskManager.getTasksByDocument(documentUri) : this.taskManager.getAllTasks();
     
     // Get current filter setting
-    const filter = vscode.workspace.getConfiguration('prdManager').get<'all' | 'completed' | 'uncompleted'>('taskFilter', 'all');
+    const filter = vscode.workspace.getConfiguration('prdAssistant').get<'all' | 'completed' | 'uncompleted'>('taskFilter', 'all');
 
     const filteredTasks = tasks.filter((task) => {
       if (task.parent) {return false;} // Skip child tasks

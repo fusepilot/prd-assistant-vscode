@@ -161,17 +161,17 @@ export class PrdCodeLensProvider implements vscode.CodeLensProvider {
   }
 
   private isEnabled(): boolean {
-    const configEnabled = vscode.workspace.getConfiguration("prdManager").get("showCodeLens", true);
+    const configEnabled = vscode.workspace.getConfiguration("prdAssistant").get("showCodeLens", true);
     return configEnabled && this._sessionEnabled;
   }
   
   private isHeaderCodeLensEnabled(): boolean {
-    const config = vscode.workspace.getConfiguration("prdManager");
+    const config = vscode.workspace.getConfiguration("prdAssistant");
     return config.get<boolean>("enableCodeLensForHeaders", true);
   }
   
   private isTaskCodeLensEnabled(): boolean {
-    const config = vscode.workspace.getConfiguration("prdManager");
+    const config = vscode.workspace.getConfiguration("prdAssistant");
     return config.get<boolean>("enableCodeLensForTasks", true);
   }
 }

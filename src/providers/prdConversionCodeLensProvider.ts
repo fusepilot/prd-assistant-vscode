@@ -151,8 +151,8 @@ export class PrdConversionCodeLensProvider implements vscode.CodeLensProvider {
   }
 
   private isEnabled(): boolean {
-    const configEnabled = vscode.workspace.getConfiguration("prdManager").get("showCodeLens", true);
-    const conversionEnabled = vscode.workspace.getConfiguration("prdManager").get("enableConversionCodeLens", true);
+    const configEnabled = vscode.workspace.getConfiguration("prdAssistant").get("showCodeLens", true);
+    const conversionEnabled = vscode.workspace.getConfiguration("prdAssistant").get("enableConversionCodeLens", true);
     return configEnabled && conversionEnabled && this._sessionEnabled;
   }
 }

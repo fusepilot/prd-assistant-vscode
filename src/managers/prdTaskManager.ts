@@ -911,7 +911,7 @@ export class PrdTaskManager {
   }
 
   private generateTaskId(): string {
-    const config = vscode.workspace.getConfiguration("prdManager");
+    const config = vscode.workspace.getConfiguration("prdAssistant");
     const idFormat = config.get<string>("idFormat", "sequential");
 
     if (idFormat === "sequential") {
@@ -933,7 +933,7 @@ export class PrdTaskManager {
       this.idCounter = (this.idCounter + 1) % 1000; // Reset after 999
 
       // Take last 3 digits of timestamp and append counter
-      const config = vscode.workspace.getConfiguration("prdManager");
+      const config = vscode.workspace.getConfiguration("prdAssistant");
       const prefix = config.get<string>("taskIdPrefix", "PRD");
       const id = `${prefix}-${timestamp.slice(-3)}${paddedCounter}`;
 
@@ -962,7 +962,7 @@ export class PrdTaskManager {
 
     // Check all tasks in memory
     for (const task of this.taskById.values()) {
-      const config = vscode.workspace.getConfiguration("prdManager");
+      const config = vscode.workspace.getConfiguration("prdAssistant");
       const prefix = config.get<string>("taskIdPrefix", "PRD");
       const regex = new RegExp(`^${prefix}-(\\d+)$`);
       const match = task.id.match(regex);
@@ -976,14 +976,14 @@ export class PrdTaskManager {
 
     // If we found any PRD-XXXXXX format IDs, increment from the highest
     if (highestId > 0) {
-      const config = vscode.workspace.getConfiguration("prdManager");
+      const config = vscode.workspace.getConfiguration("prdAssistant");
       const prefix = config.get<string>("taskIdPrefix", "PRD");
       const newId = `${prefix}-${(highestId + 1).toString().padStart(6, "0")}`;
       return newId;
     }
 
     // No PRD-XXXXXX format IDs found, start with PRD-100001
-    const config = vscode.workspace.getConfiguration("prdManager");
+    const config = vscode.workspace.getConfiguration("prdAssistant");
     const prefix = config.get<string>("taskIdPrefix", "PRD");
     return `${prefix}-100001`;
   }
@@ -993,7 +993,7 @@ export class PrdTaskManager {
   }
 
   private getConfig<T>(key: string): T | undefined {
-    return vscode.workspace.getConfiguration("prdManager").get<T>(key);
+    return vscode.workspace.getConfiguration("prdAssistant").get<T>(key);
   }
 
   async normalizeCheckboxes(document: vscode.TextDocument): Promise<vscode.TextEdit[]> {

@@ -49,7 +49,7 @@ export class PrdDecorationProvider implements vscode.Disposable {
     }
 
     private updateDecorations(editor: vscode.TextEditor): void {
-        const config = vscode.workspace.getConfiguration('prdManager');
+        const config = vscode.workspace.getConfiguration('prdAssistant');
         const enableDecorations = config.get<boolean>('enableDecorations', true);
         
         if (!enableDecorations) {
@@ -132,7 +132,7 @@ export class PrdDecorationProvider implements vscode.Disposable {
     }
 
     private getConfig<T>(key: string, defaultValue: T): T {
-        return vscode.workspace.getConfiguration('prdManager').get(key, defaultValue);
+        return vscode.workspace.getConfiguration('prdAssistant').get(key, defaultValue);
     }
 
     dispose(): void {

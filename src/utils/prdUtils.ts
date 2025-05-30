@@ -11,7 +11,7 @@ export function isPrdFile(document: vscode.TextDocument): boolean {
     return false;
   }
 
-  const config = vscode.workspace.getConfiguration('prdManager');
+  const config = vscode.workspace.getConfiguration('prdAssistant');
   const filename = path.basename(document.fileName);
   
   // Check if it's in the additional files list
@@ -35,7 +35,7 @@ export function isPrdFile(document: vscode.TextDocument): boolean {
  * Gets the PRD file patterns for glob searches
  */
 export function getPrdFilePatterns(): string[] {
-  const config = vscode.workspace.getConfiguration('prdManager');
+  const config = vscode.workspace.getConfiguration('prdAssistant');
   const patterns = config.get<string[]>('filePatterns', ['*prd*.md', 'PRD*.md', '*PRD*.md']);
   const additionalFiles = config.get<string[]>('additionalFiles', []);
   

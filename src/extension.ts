@@ -612,7 +612,7 @@ Additional notes and considerations.
     vscode.commands.registerCommand("prd-assistant.filterAllTasks", async () => {
       // Try workspace first, fallback to global
       const target = vscode.workspace.workspaceFolders ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global;
-      await vscode.workspace.getConfiguration("prdManager").update("taskFilter", "all", target);
+      await vscode.workspace.getConfiguration("prdAssistant").update("taskFilter", "all", target);
       console.log("Set filter to all");
       treeProvider.refresh();
     })
@@ -622,7 +622,7 @@ Additional notes and considerations.
     vscode.commands.registerCommand("prd-assistant.filterCompletedTasks", async () => {
       // Try workspace first, fallback to global
       const target = vscode.workspace.workspaceFolders ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global;
-      await vscode.workspace.getConfiguration("prdManager").update("taskFilter", "completed", target);
+      await vscode.workspace.getConfiguration("prdAssistant").update("taskFilter", "completed", target);
       console.log("Set filter to completed");
       treeProvider.refresh();
     })
@@ -632,7 +632,7 @@ Additional notes and considerations.
     vscode.commands.registerCommand("prd-assistant.filterUncompletedTasks", async () => {
       // Try workspace first, fallback to global
       const target = vscode.workspace.workspaceFolders ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global;
-      await vscode.workspace.getConfiguration("prdManager").update("taskFilter", "uncompleted", target);
+      await vscode.workspace.getConfiguration("prdAssistant").update("taskFilter", "uncompleted", target);
       console.log("Set filter to uncompleted");
       treeProvider.refresh();
     })
@@ -1160,7 +1160,7 @@ Additional notes and considerations.
         }
         
         // Check if checkbox normalization is enabled
-        const config = vscode.workspace.getConfiguration("prdManager");
+        const config = vscode.workspace.getConfiguration("prdAssistant");
         if (!config.get<boolean>("normalizeCheckboxes", true)) {
           return [];
         }
@@ -1178,7 +1178,7 @@ Additional notes and considerations.
   context.subscriptions.push(
     vscode.workspace.onDidChangeTextDocument(async (event) => {
       if (event.document.languageId === "markdown" && event.contentChanges.length > 0 && isPrdFile(event.document)) {
-        const config = vscode.workspace.getConfiguration("prdManager");
+        const config = vscode.workspace.getConfiguration("prdAssistant");
         const autoProcess = config.get<boolean>("autoProcessDocuments", true);
         const showWarnings = config.get<boolean>("showDuplicateWarnings", true);
         
