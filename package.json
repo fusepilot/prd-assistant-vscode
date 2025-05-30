@@ -1,19 +1,12 @@
 {
   "name": "prd-manager",
   "displayName": "PRD Manager",
-  "description": "Transform your Product Requirements Documents into interactive, trackable project dashboards with AI assistant integration.",
+  "description": "Transform your Product Requirements Documents into interactive, trackable project dashboards.",
   "version": "1.0.0",
-  "publisher": "prd-manager",
-  "author": "PRD Manager Team",
+  "publisher": "fusepilot",
+  "author": "Michael Delaney",
+  "icon": "images/icon.png",
   "license": "MIT",
-  "homepage": "https://github.com/prd-manager/prd-manager-vscode#readme",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/prd-manager/prd-manager-vscode"
-  },
-  "bugs": {
-    "url": "https://github.com/prd-manager/prd-manager-vscode/issues"
-  },
   "keywords": [
     "prd",
     "product-requirements",
@@ -31,6 +24,7 @@
   },
   "categories": [
     "Other",
+    "Linters",
     "Formatters"
   ],
   "activationEvents": [
@@ -456,7 +450,10 @@
         "prdManager.idFormat": {
           "type": "string",
           "default": "sequential",
-          "enum": ["sequential", "timestamp"],
+          "enum": [
+            "sequential",
+            "timestamp"
+          ],
           "enumDescriptions": [
             "Sequential IDs: PREFIX-100001, PREFIX-100002, etc. (recommended)",
             "Timestamp-based IDs: PREFIX-XXXYYY where XXX is last 3 digits of timestamp and YYY is a counter"

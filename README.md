@@ -1,6 +1,6 @@
 # PRD Manager - VSCode Extension
 
-Transform your Product Requirements Documents into interactive, trackable project dashboards with AI assistant integration.
+Transform your Product Requirements Documents into interactive, trackable project dashboards.
 
 ## 🎯 Features
 
@@ -12,12 +12,13 @@ Turn your markdown task lists into interactive checkboxes with automatic progres
 - Automatic task ID generation (PRD-XXXXXX format)
 - Visual progress indicators
 - Nested task support with hierarchy tracking
+- Convert regular list items to tasks with one click
 
 ### 👥 Smart Task Assignment
 
-Assign tasks to team members or AI Copilots with @-mention syntax.
+Assign tasks to team members with @-mention syntax.
 
-- Syntax: `@username-copilot` for clear ownership
+- Syntax: `@username` for clear ownership
 - Visual highlighting of assignees
 - Bulk assignment capabilities
 - Track workload by team member
@@ -28,35 +29,29 @@ Reference any task anywhere with automatic deep links.
 
 - Every task gets a unique ID (e.g., PRD-123456)
 - Click any PRD-XXXXXX reference to jump to that task
-- Hover for quick task preview
 - Copy shareable links with one click
-
-### 🤖 MCP Server Integration
-
-Built-in Model Context Protocol server enables AI assistants to interact with your PRDs programmatically.
-
-Available MCP tools:
-
-- `list_tasks` - Query tasks with filters
-- `get_task` - Retrieve specific task details
-- `update_task` - Modify task status or assignee
-- `create_task` - Add new tasks programmatically
-- `get_progress` - Generate progress statistics
 
 ### 📊 Visual Progress Tracking
 
 Get instant visibility into project progress with multiple views.
 
-- Tree view explorer in sidebar
-- Inline CodeLens statistics
-- Progress reports with charts
-- Real-time updates
+- Tree view explorer in sidebar with task hierarchy
+- Inline CodeLens statistics and actions
+- Progress reports with completion percentages
+- Real-time updates as you work
+- Export progress reports to CSV/JSON formats
+
+### 🎨 Enhanced Editing Experience
+
+- **CodeLens Actions**: Toggle tasks, assign users, copy IDs directly from the editor
+- **Quick Fixes**: Automatically resolve duplicate task IDs
+- **Format on Save**: Normalize checkbox formatting automatically
+- **Conversion Tools**: Convert list items to tasks in bulk or individually
+- **Tree View**: Organize tasks by headers with filtering options
 
 ## 📋 Requirements
 
-- Visual Studio Code 1.74.0 or higher
-- Node.js 16.0 or higher (for MCP server)
-- Git (for version control integration)
+- Visual Studio Code 1.100.0 or higher
 
 ## 🚀 Getting Started
 
@@ -67,14 +62,32 @@ Get instant visibility into project progress with multiple views.
 3. Search for "PRD Manager"
 4. Click Install
 
-### Installation from Source
+### First Use
 
-```bash
-git clone https://github.com/yourusername/vscode-prd-manager
-cd vscode-prd-manager
-npm install
-npm run compile
-```
+1. **Create a PRD file**: Use the "Create Empty PRD File" button in the PRD Explorer or create any `.md` file with "PRD" in the name
+2. **Add tasks**: Write tasks using markdown syntax:
+
+   ```markdown
+   # My Project
+
+   ## Tasks
+
+   - [ ] Complete user authentication PRD-100001
+   - [ ] Design database schema @john PRD-100002
+   - [ ] Implement API endpoints PRD-100003
+   ```
+
+3. **Interactive features**: Click checkboxes, use CodeLens actions, and view progress in the PRD Explorer
+
+### Supported File Patterns
+
+By default, PRD Manager activates for files matching:
+
+- `*prd*.md`
+- `PRD*.md`
+- `*PRD*.md`
+
+You can also configure additional files in settings.
 
 ## 💻 Development Guide
 
@@ -82,62 +95,22 @@ npm run compile
 
 1. **Launch Extension Development Host**
 
-   - Press `F5` in VSCode (or run "Debug: Start Debugging" from Command Palette)
+   - Press `F5` in VSCode
    - This opens a new "Extension Development Host" window
    - Your extension is pre-installed in this window
-   - Open any folder with PRD.md files to test
 
 2. **Making Changes**
 
    - Edit source files in `src/`
-   - If using watch mode (`npm run watch`), TypeScript compiles automatically
-   - **Reloading Changes**:
-     - Run "Developer: Reload Window" from Command Palette (Ctrl+Shift+P)
-     - Or click the green restart button in the debug toolbar
-     - Or close and re-launch with F5
+   - Use `npm run watch` for auto-compilation
+   - Reload with "Developer: Reload Window" (Ctrl+Shift+P)
 
-3. **Debugging**
+3. **Testing**
+   - Create test PRD.md files
+   - Test checkboxes, assignments, deep links
+   - Check the PRD Explorer view
 
-   - Set breakpoints in your TypeScript code
-   - Use VSCode's debug console
-   - View extension logs in "Output" panel → "Extension Host"
-
-4. **Testing Changes**
-   - Create test PRD.md files in the Extension Host window
-   - Test all features: checkboxes, assignments, deep links
-   - Check the PRD Explorer view in the sidebar
-   - Monitor the debug console for errors
-
-### Project Structure
-
-```
-prd-manager/
-├── .vscode/
-│   ├── launch.json          # Launch configurations
-│   └── tasks.json           # Build tasks
-├── src/
-│   ├── extension.ts          # Main extension entry point
-│   ├── mcpServer.ts         # MCP server implementation
-│   ├── prdTreeProvider.ts   # Tree view provider
-│   ├── prdDecorationProvider.ts  # Text decorations
-│   └── prdCodeLensProvider.ts    # CodeLens provider
-├── syntaxes/
-│   └── prd.tmLanguage.json  # Syntax highlighting rules
-├── images/                   # Extension icons and screenshots
-├── out/                      # Compiled JavaScript (git ignored)
-├── node_modules/            # Dependencies (git ignored)
-├── .gitignore               # Git ignore file
-├── .vscodeignore            # Files to exclude from extension package
-├── CHANGELOG.md             # Change log
-├── package.json             # Extension manifest
-├── package-lock.json        # Locked dependencies
-├── tsconfig.json            # TypeScript configuration
-└── README.md               # This file
-```
-
-### Common Development Tasks
-
-**Available Scripts**
+### Available Scripts
 
 ```bash
 # Development
@@ -153,172 +126,130 @@ npm run build:prod  # Clean, compile, and package
 
 # Publishing (requires vsce login)
 npm run publish       # Publish current version
-npm run publish:patch # Bump patch version and publish (1.0.0 → 1.0.1)
-npm run publish:minor # Bump minor version and publish (1.0.0 → 1.1.0)
-npm run publish:major # Bump major version and publish (1.0.0 → 2.0.0)
-npm run publish:pre   # Publish as pre-release
+npm run publish:patch # Bump patch version and publish
+npm run publish:minor # Bump minor version and publish
+npm run publish:major # Bump major version and publish
 
 # Utilities
-npm run clean       # Remove build artifacts and .vsix files
+npm run clean       # Remove build artifacts
 ```
 
-**Watch Mode Development**
+### Project Structure
 
-```bash
-# Terminal 1: Auto-compile TypeScript
-npm run watch
-
-# Terminal 2: Run tests in watch mode
-npm run watch-tests
 ```
-
-**Run Extension**
-
-- Press `F5` to launch Extension Development Host
-- Or use "Debug: Start Debugging" from Command Palette
-
-**Package for Testing**
-
-```bash
-npm run package
-# Creates prd-manager-1.0.0.vsix for local testing
+prd-manager/
+├── src/
+│   ├── extension.ts                           # Main extension entry point
+│   ├── managers/
+│   │   └── prdTaskManager.ts                  # Core task management logic
+│   ├── models/
+│   │   ├── task.ts                            # Task data models
+│   │   └── treeNode.ts                        # Tree view models
+│   ├── providers/
+│   │   ├── prdTreeProvider.ts                 # Sidebar tree view
+│   │   ├── prdCodeLensProvider.ts             # Inline actions
+│   │   ├── prdDecorationProvider.ts           # Text decorations
+│   │   ├── prdDocumentLinkProvider.ts         # Deep linking
+│   │   ├── prdQuickFixProvider.ts             # Auto-fixes
+│   │   └── prdConversionCodeLensProvider.ts   # List conversion
+│   ├── utils/
+│   │   └── prdUtils.ts                        # Utility functions
+│   └── test/
+│       └── extension.test.ts                  # Test suite
+├── syntaxes/
+│   └── prd.tmLanguage.json                    # Syntax highlighting
+├── images/                                    # Extension icons
+├── package.json                               # Extension manifest
+└── README.md                                  # This file
 ```
-
-**Lint Code**
-
-```bash
-npm run lint
-# Auto-fix issues
-npm run lint -- --fix
-```
-
-**Compile TypeScript**
-
-```bash
-npm run compile
-```
-
-**Package Extension**
-
-```bash
-npm install -g @vscode/vsce
-vsce package
-# Creates prd-manager-1.0.0.vsix
-```
-
-### Debugging Tips
-
-1. **Set Breakpoints**: Click in the gutter next to line numbers in `src/` files
-2. **Debug Console**: Use for evaluating expressions while debugging
-3. **Extension Host Logs**: View → Output → Select "Extension Host" from dropdown
-4. **Developer Tools**: Help → Toggle Developer Tools (for UI debugging)
-
-## 📦 Publishing to Marketplace
-
-### Prerequisites
-
-1. **Create Publisher Account**
-
-   - Go to https://marketplace.visualstudio.com/manage
-   - Sign in with Microsoft account
-   - Create a publisher ID
-
-2. **Get Personal Access Token**
-
-   - Visit https://dev.azure.com/your-org
-   - Go to User Settings → Personal Access Tokens
-   - Create token with "Marketplace (Publish)" scope
-
-3. **Install VSCE (Visual Studio Code Extension Manager)**
-   ```bash
-   npm install -g @vscode/vsce
-   ```
-
-### Publishing Steps
-
-1. **Update Version**
-
-   ```bash
-   # Update version in package.json
-   npm version patch  # or minor/major
-   ```
-
-2. **Package Extension**
-
-   ```bash
-   vsce package
-   ```
-
-3. **Publish**
-
-   ```bash
-   vsce publish -p <your-personal-access-token>
-   # or login once
-   vsce login <publisher-id>
-   vsce publish
-   ```
-
-4. **Update Existing Extension**
-   ```bash
-   vsce publish patch  # Auto-increment version and publish
-   ```
-
-### Pre-publish Checklist
-
-- [ ] Update CHANGELOG.md
-- [ ] Test all features in clean environment
-- [ ] Update README with new features
-- [ ] Add/update screenshots
-- [ ] Run linter: `npm run lint`
-- [ ] Run tests: `npm test`
-- [ ] Check package size: `vsce ls`
-- [ ] Verify LICENSE file exists
 
 ## ⚙️ Extension Settings
 
 Configure PRD Manager through VSCode settings:
 
-- `prdManager.mcpServer.enabled`: Enable/disable MCP server for AI integration (default: `true`)
-- `prdManager.mcpServer.port`: Port for MCP server (default: `3000`)
+### Core Settings
+
 - `prdManager.autoGenerateIds`: Automatically generate task IDs (default: `true`)
+- `prdManager.taskIdPrefix`: Prefix for generated task IDs (default: `"PRD"`)
 - `prdManager.idFormat`: ID generation strategy - `"sequential"` or `"timestamp"` (default: `"sequential"`)
+
+### Display Settings
+
 - `prdManager.showCodeLens`: Show inline task actions (default: `true`)
+- `prdManager.enableCodeLensForHeaders`: Show stats and 'Add Task' on headers (default: `true`)
+- `prdManager.enableCodeLensForTasks`: Show action buttons on tasks (default: `true`)
+- `prdManager.enableConversionCodeLens`: Show 'Convert to Task' on list items (default: `true`)
+- `prdManager.showProgressInTreeView`: Display completion percentages (default: `true`)
+
+### File Detection
+
+- `prdManager.filePatterns`: File patterns to identify PRD files (default: `["*prd*.md", "PRD*.md", "*PRD*.md"]`)
+- `prdManager.additionalFiles`: Specific files to enhance with PRD features (default: `[]`)
+  - Example: `["CLAUDE.md", "TODO.md", "TASKS.md"]`
+
+### Behavior Settings
+
+- `prdManager.normalizeCheckboxes`: Auto-fix checkbox formatting on save (default: `true`)
+- `prdManager.autoProcessDocuments`: Auto-process PRD files when opened (default: `true`)
+- `prdManager.showDuplicateWarnings`: Show warnings for duplicate task IDs (default: `true`)
+- `prdManager.enableQuickFixes`: Enable auto-fixes for duplicates (default: `true`)
+
+### Visual Enhancement
+
 - `prdManager.decorateAssignees`: Highlight @-mentions (default: `true`)
 - `prdManager.decorateDeepLinks`: Make task IDs clickable (default: `true`)
-- `prdManager.additionalFiles`: List of specific files to enhance with PRD Manager features (default: `[]`)
-  - Example: `["CLAUDE.md", "TODO.md", "TASKS.md"]`
-  - These files will have all PRD Manager features enabled regardless of their naming pattern
+- `prdManager.enableDecorations`: Enable visual decorations (default: `true`)
+
+## 🔧 Key Features Explained
+
+### Task ID Generation
+
+- **Sequential**: PRD-100001, PRD-100002, etc. (recommended)
+- **Timestamp**: Based on current timestamp for uniqueness
+- **Smart Collision Avoidance**: Automatically detects existing IDs
+
+### CodeLens Actions
+
+- **On Headers**: View completion stats, add tasks
+- **On Tasks**: Toggle completion, assign users, copy IDs
+- **On List Items**: Convert to tasks with auto-generated IDs
+
+### Tree View Features
+
+- **Hierarchical Display**: Tasks organized by headers
+- **Progress Indicators**: Completion percentages
+- **Filtering**: Show all, completed, or uncompleted tasks
+- **Multi-file Support**: Handle multiple PRD files in workspace
+
+### Checkbox Normalization
+
+Automatically fixes common checkbox formatting issues:
+
+- `[]` → `[ ]` (adds space for empty checkbox)
+- `[x ]`, `[ x]`, `[ x ]` → `[x]` (normalizes checked checkbox)
 
 ## 🐛 Known Issues
 
 - Task IDs might regenerate if file is edited outside VSCode
 - Large files (>1000 tasks) may have performance impact
-- MCP server requires restart after port change
+- Deep links only work within the same workspace
 
 ## 📝 Release Notes
 
 ### 1.0.0 - Initial Release
 
 - ✅ Interactive checkbox functionality
-- 🆔 Automatic task ID generation
+- 🆔 Automatic task ID generation with collision avoidance
 - 👥 Task assignment with @-mentions
 - 🔗 Deep linking between tasks
-- 🤖 MCP server for AI integration
 - 📊 Progress tracking and reporting
 - 🎨 Syntax highlighting for PRD files
-
-### 1.0.1 - Bug Fixes
-
-- Fixed task ID persistence issue (#12)
-- Improved performance for large files (#15)
-- Better error handling for MCP connections (#18)
-
-### 1.1.0 - Enhanced Features
-
-- Added bulk task operations (#22)
-- Improved assignee autocomplete (#25)
-- Export reports to CSV/JSON (#28)
-- Cross-file task references (#30)
+- 🌳 Tree view explorer with hierarchy
+- 📋 CodeLens integration for inline actions
+- 🔄 List item to task conversion
+- 📤 CSV/JSON export functionality
+- 🔧 Quick fixes for duplicate IDs
+- ⚡ Auto-format checkbox normalization
 
 ## 🤝 Contributing
 
@@ -336,17 +267,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙋‍♀️ Support
 
-- **Documentation**: [Wiki](https://github.com/yourusername/vscode-prd-manager/wiki)
-- **Issues**: [GitHub Issues](https://github.com/yourusername/vscode-prd-manager/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/vscode-prd-manager/discussions)
-- **Email**: support@prdmanager.dev
-
-## 🏆 Acknowledgments
-
-- Thanks to the VSCode team for the excellent extension API
-- Model Context Protocol specification by Anthropic
-- All our contributors and early adopters
-
----
-
-**Made with ❤️ by the PRD Manager Team**
+- **Issues**: [GitHub Issues](https://github.com/fusepilot/prd-manager-vscode/issues)
+- **Documentation**: Check this README and the extension's built-in help
