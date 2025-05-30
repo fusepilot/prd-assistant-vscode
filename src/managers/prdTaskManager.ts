@@ -6,23 +6,35 @@ export class PrdTaskManager {
   private taskById: Map<string, PrdTask> = new Map();
   private _onTasksChanged = new vscode.EventEmitter<void>();
   public readonly onTasksChanged = this._onTasksChanged.event;
+  private _onDocumentsChanged = new vscode.EventEmitter<void>();
+  public readonly onDocumentsChanged = this._onDocumentsChanged.event;
   private idCounter = 0;
   private isProcessing = false;
 
   removeDocument(uri: vscode.Uri): void {
     const uriString = uri.toString();
+    console.log(`TaskManager.removeDocument called with URI: ${uriString} (fsPath: ${uri.fsPath})`);
+    
+    // Log all current document URIs for debugging
+    console.log(`Current documents in task manager:`);
+    this.tasks.forEach((_, docUri) => {
+      console.log(`  - ${docUri}`);
+    });
     
     // Remove all tasks for this document
     const documentTasks = this.tasks.get(uriString) || [];
+    console.log(`Found ${documentTasks.length} tasks to remove for this document`);
     documentTasks.forEach((task) => this.taskById.delete(task.id));
     
     // Remove the document from the tasks map
-    this.tasks.delete(uriString);
+    const deleted = this.tasks.delete(uriString);
+    console.log(`Document removal from map: ${deleted ? 'success' : 'failed (not found)'}`);
     
     console.log(`Removed document and its tasks: ${uri.fsPath}`);
     
-    // Fire the change event to update the tree view
+    // Fire the change events to update the tree view
     this._onTasksChanged.fire();
+    this._onDocumentsChanged.fire();
   }
 
   async processDocument(document: vscode.TextDocument): Promise<void> {
@@ -192,6 +204,7 @@ export class PrdTaskManager {
     console.log(`Found ${allTasks.length} tasks in ${document.fileName}`);
 
     this._onTasksChanged.fire();
+    this._onDocumentsChanged.fire();
   }
 
   private buildTaskHierarchy(tasks: PrdTask[], lines: string[]): void {

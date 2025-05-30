@@ -9,21 +9,76 @@ interface DocumentNode {
   filename: string;
 }
 
-export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string | DocumentNode> {
-  private _onDidChangeTreeData = new vscode.EventEmitter<PrdTask | string | DocumentNode | undefined | null | void>();
+interface MessageNode {
+  type: 'message';
+  text: string;
+  icon?: string;
+}
+
+export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string | DocumentNode | MessageNode> {
+  private _onDidChangeTreeData = new vscode.EventEmitter<PrdTask | string | DocumentNode | MessageNode | undefined | null | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
   private currentDocumentContext: vscode.Uri | null = null;
+  private isScanning: boolean = false;
+  private log: (message: string) => void = () => {};
+  private refreshTimeout: NodeJS.Timeout | undefined;
 
   constructor(private taskManager: PrdTaskManager) {
-    taskManager.onTasksChanged(() => this.refresh());
+    this.log('TreeProvider: Constructor called');
+    taskManager.onTasksChanged(() => {
+      this.log('TreeProvider: onTasksChanged event fired');
+      this.refresh();
+    });
+    taskManager.onDocumentsChanged(() => {
+      this.log('TreeProvider: onDocumentsChanged event fired');
+      this.refresh();
+    });
+  }
+
+  setLogger(log: (message: string) => void): void {
+    this.log = log;
   }
 
   refresh(): void {
-    this._onDidChangeTreeData.fire();
+    // Debounce rapid refresh calls to prevent spam
+    if (this.refreshTimeout) {
+      clearTimeout(this.refreshTimeout);
+    }
+    
+    this.refreshTimeout = setTimeout(() => {
+      this.log('TreeProvider: refresh() executed');
+      this._onDidChangeTreeData.fire();
+      this.refreshTimeout = undefined;
+    }, 50); // 50ms debounce
   }
 
-  getTreeItem(element: PrdTask | string | DocumentNode): vscode.TreeItem {
-    if (typeof element === "object" && "type" in element && element.type === "document") {
+  setScanning(scanning: boolean): void {
+    this.log(`TreeProvider.setScanning: ${this.isScanning} -> ${scanning}`);
+    this.isScanning = scanning;
+    this.refresh();
+  }
+
+  getTreeItem(element: PrdTask | string | DocumentNode | MessageNode): vscode.TreeItem {
+    if (typeof element === "object" && "type" in element && element.type === "message") {
+      // This is a message node
+      const item = new vscode.TreeItem(element.text, vscode.TreeItemCollapsibleState.None);
+      item.contextValue = "prdMessage";
+      item.iconPath = new vscode.ThemeIcon(element.icon || "info");
+      
+      // If it's an empty PRD file message, add command to open the file
+      if (element.text.includes('(no tasks yet)')) {
+        const documents = this.taskManager.getDocuments();
+        if (documents.length === 1) {
+          item.command = {
+            command: "vscode.open",
+            title: "Open File",
+            arguments: [documents[0]]
+          };
+        }
+      }
+      
+      return item;
+    } else if (typeof element === "object" && "type" in element && element.type === "document") {
       // This is a document node
       const item = new vscode.TreeItem(element.filename, vscode.TreeItemCollapsibleState.Expanded);
       item.contextValue = "prdDocument";
@@ -66,6 +121,8 @@ export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string
       // Check if this header has any tasks under it
       const headerTasks = this.getTasksForHeader(element);
       const hasChildren = headerTasks.length > 0;
+      
+      this.log(`TreeProvider: getTreeItem for header "${headerText}" - found ${headerTasks.length} tasks, hasChildren: ${hasChildren}`);
       
       const item = new vscode.TreeItem(headerText, hasChildren ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.None);
       item.contextValue = "prdHeader";
@@ -146,17 +203,37 @@ export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string
     }
   }
 
-  getChildren(element?: PrdTask | string | DocumentNode): Thenable<(PrdTask | string | DocumentNode)[]> {
+  getChildren(element?: PrdTask | string | DocumentNode | MessageNode): Thenable<(PrdTask | string | DocumentNode | MessageNode)[]> {
     if (!element) {
-      // Return root level - check if we have multiple documents
+      // Return root level - first check if we're scanning
+      this.log(`TreeProvider.getChildren: isScanning=${this.isScanning}`);
+      if (this.isScanning) {
+        const scanningMessage: MessageNode = {
+          type: 'message',
+          text: 'Scanning workspace for PRD files...',
+          icon: 'sync~spin'
+        };
+        this.log('TreeProvider: Returning scanning message');
+        return Promise.resolve([scanningMessage]);
+      }
+      
+      // Check if we have multiple documents
       const documents = this.taskManager.getDocuments();
-      console.log(`TreeProvider: Found ${documents.length} documents:`, documents.map(d => path.basename(d.fsPath)));
+      this.log(`TreeProvider: Found ${documents.length} documents: ${documents.map(d => path.basename(d.fsPath)).join(', ')}`);
       
       if (documents.length > 1) {
-        // Multiple files: return document nodes, but only for documents that have tasks
+        // Multiple files: filter based on whether they're "obviously" PRD files
         const documentNodes = documents
           .filter(uri => {
+            const filename = path.basename(uri.fsPath).toLowerCase();
             const tasks = this.taskManager.getTasksByDocument(uri);
+            
+            // Always show files with "prd" in the name, regardless of tasks
+            if (filename.includes('prd')) {
+              return true;
+            }
+            
+            // For other files (additional files), only show if they have tasks
             return tasks.length > 0;
           })
           .map(uri => ({
@@ -167,19 +244,43 @@ export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string
         console.log('TreeProvider: Returning document nodes for multi-file mode');
         return Promise.resolve(documentNodes);
       } else if (documents.length === 1) {
-        // Single file: return headers/tasks directly, but only if it has tasks
+        // Single file: show it if it's obviously PRD or has tasks
         const singleDoc = documents[0];
+        const filename = path.basename(singleDoc.fsPath).toLowerCase();
         const tasks = this.taskManager.getTasksByDocument(singleDoc);
-        if (tasks.length > 0) {
-          console.log('TreeProvider: Single file mode, returning elements for:', path.basename(singleDoc.fsPath));
-          return Promise.resolve(this.getRootElementsForDocument(singleDoc));
+        
+        this.log(`TreeProvider: Single file analysis:`);
+        this.log(`  - Filename: "${filename}"`);
+        this.log(`  - Contains 'prd': ${filename.includes('prd')}`);
+        this.log(`  - Tasks count: ${tasks.length}`);
+        this.log(`  - Should show: ${filename.includes('prd') || tasks.length > 0}`);
+        
+        // Show if it has "prd" in name OR has tasks
+        if (filename.includes('prd') || tasks.length > 0) {
+          this.log('TreeProvider: Single file mode, returning elements for: ' + path.basename(singleDoc.fsPath));
+          const elements = this.getRootElementsForDocument(singleDoc);
+          this.log(`TreeProvider: getRootElementsForDocument returned ${elements.length} elements`);
+          
+          // If it's a PRD file with no tasks/headers, show a message instead of empty
+          if (elements.length === 0 && filename.includes('prd')) {
+            const emptyMessage: MessageNode = {
+              type: 'message',
+              text: `${path.basename(singleDoc.fsPath)} (no tasks yet)`,
+              icon: 'file'
+            };
+            this.log('TreeProvider: Returning empty PRD file message');
+            return Promise.resolve([emptyMessage]);
+          }
+          
+          this.log(`TreeProvider: Returning ${elements.length} elements: ${elements.map(e => typeof e === 'string' ? e : e.text || 'task').join(', ')}`);
+          return Promise.resolve(elements);
         } else {
-          console.log('TreeProvider: Single file has no tasks, returning empty');
+          this.log('TreeProvider: Single file has no tasks and is not obviously PRD, returning empty');
           return Promise.resolve([]);
         }
       } else {
         // No documents
-        console.log('TreeProvider: No documents found');
+        this.log('TreeProvider: No documents found');
         return Promise.resolve([]);
       }
     } else if (typeof element === "object" && "type" in element && element.type === "document") {
@@ -190,7 +291,9 @@ export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string
       return Promise.resolve(elements);
     } else if (typeof element === "string") {
       // Return tasks under this header
-      return Promise.resolve(this.getTasksForHeader(element));
+      const tasks = this.getTasksForHeader(element);
+      this.log(`TreeProvider: getChildren for header "${element}" returning ${tasks.length} tasks`);
+      return Promise.resolve(tasks);
     } else {
       // Return children of the task, applying filter
       const task = element as PrdTask;
@@ -338,20 +441,25 @@ export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string
     let headerText: string;
     let headerLevel: number;
 
+    this.log(`TreeProvider: getTasksForHeader called with: "${header}"`);
+
     if (header.includes('::')) {
       // Multi-file mode: extract document URI
       const [uriString, headerPart] = header.split('::', 2);
       documentUri = vscode.Uri.parse(uriString);
       headerText = headerPart.replace(/^#+\s+/, "");
       headerLevel = headerPart.match(/^#+/)?.[0].length || 0;
+      this.log(`TreeProvider: Parsed multi-file header - URI: ${uriString}, headerText: "${headerText}", level: ${headerLevel}`);
     } else {
       // Single file mode: use the header directly
       headerText = header.replace(/^#+\s+/, "");
       headerLevel = header.match(/^#+/)?.[0].length || 0;
+      this.log(`TreeProvider: Parsed single-file header - headerText: "${headerText}", level: ${headerLevel}`);
     }
     
     // Get tasks from appropriate document(s)
     const tasks = documentUri ? this.taskManager.getTasksByDocument(documentUri) : this.taskManager.getAllTasks();
+    this.log(`TreeProvider: Found ${tasks.length} total tasks to filter`);
     
     // Get current filter setting
     const filter = vscode.workspace.getConfiguration('prdAssistant').get<'all' | 'completed' | 'uncompleted'>('taskFilter', 'all');
@@ -364,18 +472,22 @@ export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string
       if (filter === 'uncompleted' && task.completed) {return false;}
 
       if (task.headers && task.headers.length > 0) {
-        const lastHeader = task.headers[task.headers.length - 1];
-        return lastHeader.text === headerText && lastHeader.level === headerLevel;
+        // Check if ANY of the task's headers match the requested header
+        return task.headers.some((h) => h.text === headerText && h.level === headerLevel);
       }
       return false;
     });
 
+    this.log(`TreeProvider: After filtering, found ${filteredTasks.length} tasks for header "${headerText}" (level ${headerLevel})`);
+    
     // Sort tasks by line number to maintain document order
     return filteredTasks.sort((a, b) => a.line - b.line);
   }
 
-  getParent(element: PrdTask | string | DocumentNode): vscode.ProviderResult<PrdTask | string | DocumentNode> {
-    if (typeof element === "string") {
+  getParent(element: PrdTask | string | DocumentNode | MessageNode): vscode.ProviderResult<PrdTask | string | DocumentNode | MessageNode> {
+    if (typeof element === "object" && "type" in element && element.type === "message") {
+      return undefined; // Message nodes have no parent
+    } else if (typeof element === "string") {
       // Check if this is a header with document context
       if (element.includes('::')) {
         const [uriString] = element.split('::', 2);

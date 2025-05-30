@@ -52,6 +52,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Register tree view provider for sidebar
   const treeProvider = new PrdTreeProvider(taskManager);
+  treeProvider.setLogger(log); // Pass the log function to the tree provider
   const treeView = vscode.window.createTreeView("prdExplorer", {
     treeDataProvider: treeProvider,
     showCollapseAll: false, // We'll implement custom toggle
@@ -93,6 +94,8 @@ export function activate(context: vscode.ExtensionContext) {
   // Define scan function for reuse
   const scanWorkspaceForPRDs = async () => {
     log("Scanning workspace for PRD files...");
+    treeProvider.setScanning(true);
+    
     // Try multiple patterns to catch all PRD files
     const patterns = getPrdFilePatterns();
     log("Using patterns: " + JSON.stringify(patterns));
@@ -108,25 +111,49 @@ export function activate(context: vscode.ExtensionContext) {
     const prdFiles = Array.from(allPrdFiles).map((uriString) => vscode.Uri.parse(uriString));
     log(`Found ${prdFiles.length} PRD files: ${prdFiles.map((f) => f.fsPath).join(", ")}`);
 
-    for (const file of prdFiles) {
-      try {
-        const doc = await vscode.workspace.openTextDocument(file);
-        log("Processing PRD file: " + doc.fileName);
-        log("  File URI: " + file.toString());
-        log("  Doc URI: " + doc.uri.toString());
-        await taskManager.processDocument(doc);
+    // Process files in chunks to avoid blocking
+    const chunkSize = 5;
+    for (let i = 0; i < prdFiles.length; i += chunkSize) {
+      const chunk = prdFiles.slice(i, i + chunkSize);
+      
+      await Promise.all(chunk.map(async (file) => {
+        try {
+          // Add timeout to prevent hanging on large files
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Processing timeout')), 5000)
+          );
+          
+          const processPromise = (async () => {
+            const doc = await vscode.workspace.openTextDocument(file);
+            log("Processing PRD file: " + doc.fileName);
+            log("  File URI: " + file.toString());
+            log("  Doc URI: " + doc.uri.toString());
+            await taskManager.processDocument(doc);
 
-        // Check how many tasks were found - use doc.uri instead of file
-        const tasks = taskManager.getTasksByDocument(doc.uri);
-        log(`  -> Found ${tasks.length} tasks in ${doc.fileName}`);
-      } catch (error: any) {
-        log("Error processing PRD file: " + file.fsPath + " - " + error.message);
+            // Check how many tasks were found - use doc.uri instead of file
+            const tasks = taskManager.getTasksByDocument(doc.uri);
+            log(`  -> Found ${tasks.length} tasks in ${doc.fileName}`);
+          })();
+          
+          await Promise.race([processPromise, timeoutPromise]);
+        } catch (error: any) {
+          log("Error processing PRD file: " + file.fsPath + " - " + error.message);
+        }
+      }));
+      
+      // Yield control to avoid blocking extension host
+      if (i + chunkSize < prdFiles.length) {
+        await new Promise(resolve => setTimeout(resolve, 10));
       }
     }
 
     // After processing all files, log the documents in the task manager
     const documents = taskManager.getDocuments();
     log(`TaskManager now has ${documents.length} documents: ${documents.map((d) => d.fsPath).join(", ")}`);
+    
+    // Clear scanning state and refresh to show the documents
+    console.log("Extension: Setting scanning to false and refreshing tree");
+    treeProvider.setScanning(false);
   };
 
   // Register commands
@@ -1242,15 +1269,16 @@ Additional notes and considerations.
     }
   });
 
-  // Scan workspace for PRD files on activation
-  scanWorkspaceForPRDs()
-    .then(() => {
-      log("Workspace scan complete, refreshing tree view");
-      treeProvider.refresh();
-    })
-    .catch((error) => {
+  // Scan workspace for PRD files on activation (asynchronously to avoid blocking)
+  setTimeout(async () => {
+    try {
+      await scanWorkspaceForPRDs();
+      log("Workspace scan complete, tree should be refreshed by scanWorkspaceForPRDs");
+    } catch (error: any) {
       log("Error during workspace scan: " + error.message);
-    });
+      treeProvider.setScanning(false);
+    }
+  }, 100); // Small delay to ensure extension activation completes first
 
   // Process newly opened documents
   context.subscriptions.push(
@@ -1262,21 +1290,24 @@ Additional notes and considerations.
     })
   );
 
-  // Refresh tree view when documents change
+  // Process document changes (the task manager events will handle tree refresh)
   context.subscriptions.push(
-    vscode.workspace.onDidChangeTextDocument(() => {
-      treeProvider.refresh();
+    vscode.workspace.onDidChangeTextDocument((event) => {
+      if (event.document.languageId === "markdown" && isPrdFile(event.document)) {
+        // Only process if there are actual content changes
+        if (event.contentChanges.length > 0) {
+          setTimeout(() => taskManager.processDocument(event.document), 300);
+        }
+      }
     })
   );
 
-  // Also refresh when active editor changes (this might fix the "switch file" issue)
+  // Process newly opened/switched documents
   context.subscriptions.push(
     vscode.window.onDidChangeActiveTextEditor(async (editor) => {
-      if (editor && editor.document.languageId === "markdown") {
-        console.log("Active editor changed to markdown file:", editor.document.fileName);
-        // Process the document if it's not already processed
+      if (editor && editor.document.languageId === "markdown" && isPrdFile(editor.document)) {
+        console.log("Active editor changed to PRD file:", editor.document.fileName);
         await taskManager.processDocument(editor.document);
-        treeProvider.refresh();
       }
     })
   );
@@ -1310,8 +1341,26 @@ Additional notes and considerations.
     watcherPattern = `{${patterns.join(',')}}`;
   }
   
-  const fileWatcher = vscode.workspace.createFileSystemWatcher(watcherPattern);
-  context.subscriptions.push(fileWatcher);
+  // Create file watcher with globPattern that watches all workspace folders
+  // The RelativePattern ensures we watch the correct folders even in multi-root workspaces
+  const watchers: vscode.FileSystemWatcher[] = [];
+  
+  // If we have workspace folders, create watchers for each
+  if (vscode.workspace.workspaceFolders) {
+    for (const folder of vscode.workspace.workspaceFolders) {
+      log(`Creating file watcher for workspace folder: ${folder.uri.fsPath} with pattern: ${watcherPattern}`);
+      const globPattern = new vscode.RelativePattern(folder, watcherPattern);
+      const watcher = vscode.workspace.createFileSystemWatcher(globPattern);
+      watchers.push(watcher);
+      context.subscriptions.push(watcher);
+    }
+  } else {
+    // Fallback to simple pattern if no workspace folders
+    log(`Creating global file watcher with pattern: ${watcherPattern}`);
+    const fileWatcher = vscode.workspace.createFileSystemWatcher(watcherPattern);
+    watchers.push(fileWatcher);
+    context.subscriptions.push(fileWatcher);
+  }
   
   // Helper function to check if a file is a PRD based on its name
   const isPrdByName = (filename: string, filePath: string): boolean => {
@@ -1326,15 +1375,47 @@ Additional notes and considerations.
     });
   };
   
+  // Set up delete handlers for all watchers
+  for (const watcher of watchers) {
+    context.subscriptions.push(
+      watcher.onDidDelete((uri) => {
+        // Check if the deleted file was a PRD file
+        const filename = path.basename(uri.fsPath);
+        log(`File deleted: ${uri.fsPath}, checking if it's a PRD file...`);
+        
+        if (isPrdByName(filename, uri.fsPath)) {
+          log(`PRD file deleted: ${uri.fsPath}`);
+          const docsBefore = taskManager.getDocuments().length;
+          taskManager.removeDocument(uri);
+          const docsAfter = taskManager.getDocuments().length;
+          log(`Documents before removal: ${docsBefore}, after: ${docsAfter}`);
+          treeProvider.refresh();
+          log(`Tree refresh triggered for deleted file`);
+        } else {
+          log(`Deleted file ${filename} is not a PRD file, ignoring`);
+        }
+      })
+    );
+  }
+  
+  // Also watch for closed documents which might indicate deletion
   context.subscriptions.push(
-    fileWatcher.onDidDelete((uri) => {
-      // Check if the deleted file was a PRD file
-      const filename = path.basename(uri.fsPath);
-      
-      if (isPrdByName(filename, uri.fsPath)) {
-        log(`PRD file deleted: ${uri.fsPath}`);
-        taskManager.removeDocument(uri);
-        treeProvider.refresh();
+    vscode.workspace.onDidCloseTextDocument((document) => {
+      if (document.languageId === "markdown" && isPrdFile(document)) {
+        log(`PRD document closed: ${document.uri.fsPath}`);
+        // Check if the file still exists
+        vscode.workspace.fs.stat(document.uri).then(
+          () => {
+            // File still exists, just closed
+            log(`Closed PRD file still exists: ${document.uri.fsPath}`);
+          },
+          () => {
+            // File doesn't exist anymore, it was deleted
+            log(`Closed PRD file was deleted: ${document.uri.fsPath}`);
+            taskManager.removeDocument(document.uri);
+            treeProvider.refresh();
+          }
+        );
       }
     })
   );
