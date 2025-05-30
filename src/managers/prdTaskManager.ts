@@ -153,9 +153,6 @@ export class PrdTaskManager {
     this.tasks.set(document.uri.toString(), allTasks);
 
     console.log(`Found ${allTasks.length} tasks in ${document.fileName}`);
-    allTasks.forEach((task) => {
-      console.log(`  - ${task.id}: ${task.text}`);
-    });
 
     this._onTasksChanged.fire();
   }

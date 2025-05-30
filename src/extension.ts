@@ -9,27 +9,41 @@ import { PrdQuickFixProvider } from "./providers/prdQuickFixProvider";
 import { isPrdFile, getPrdFilePatterns } from "./utils/prdUtils";
 
 export function activate(context: vscode.ExtensionContext) {
-  console.log("PRD Assistant extension is now active!");
+  // Create output channel for extension logs
+  const outputChannel = vscode.window.createOutputChannel("PRD Assistant");
+
+  // Helper function to log to both console and output channel
+  // Only show detailed logs if in development mode
+  const isDevelopment = context.extensionMode === vscode.ExtensionMode.Development;
+  const log = (message: string) => {
+    console.log(message);
+    if (isDevelopment) {
+      outputChannel.appendLine(`[${new Date().toISOString()}] ${message}`);
+    }
+  };
 
   // Initialize the task manager
   const taskManager = new PrdTaskManager();
-  
+
+  // Add output channel to disposables
+  context.subscriptions.push(outputChannel);
+
   // Function to update context based on active editor
   const updatePrdFileContext = (editor: vscode.TextEditor | undefined) => {
     if (editor && editor.document) {
       const isPrd = isPrdFile(editor.document);
-      vscode.commands.executeCommand('setContext', 'prdAssistant.isPrdFile', isPrd);
+      vscode.commands.executeCommand("setContext", "prdAssistant.isPrdFile", isPrd);
     } else {
-      vscode.commands.executeCommand('setContext', 'prdAssistant.isPrdFile', false);
+      vscode.commands.executeCommand("setContext", "prdAssistant.isPrdFile", false);
     }
   };
-  
+
   // Set initial context
   updatePrdFileContext(vscode.window.activeTextEditor);
-  
+
   // Update context when active editor changes
   context.subscriptions.push(
-    vscode.window.onDidChangeActiveTextEditor(editor => {
+    vscode.window.onDidChangeActiveTextEditor((editor) => {
       updatePrdFileContext(editor);
     })
   );
@@ -50,7 +64,6 @@ export function activate(context: vscode.ExtensionContext) {
     treeViewReady = true;
   }, 500);
 
-
   // Register document link provider for deep linking
   const linkProvider = new PrdDocumentLinkProvider();
   context.subscriptions.push(vscode.languages.registerDocumentLinkProvider({ scheme: "file", pattern: "**/*.md" }, linkProvider));
@@ -65,9 +78,11 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Register Quick Fix provider for duplicate ID fixes
   const quickFixProvider = new PrdQuickFixProvider(taskManager);
-  context.subscriptions.push(vscode.languages.registerCodeActionsProvider({ scheme: "file", pattern: "**/*.md" }, quickFixProvider, {
-    providedCodeActionKinds: PrdQuickFixProvider.providedCodeActionKinds
-  }));
+  context.subscriptions.push(
+    vscode.languages.registerCodeActionsProvider({ scheme: "file", pattern: "**/*.md" }, quickFixProvider, {
+      providedCodeActionKinds: PrdQuickFixProvider.providedCodeActionKinds,
+    })
+  );
 
   // Register decoration provider for visual enhancements
   const decorationProvider = new PrdDecorationProvider();
@@ -75,42 +90,41 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Define scan function for reuse
   const scanWorkspaceForPRDs = async () => {
-    console.log("Scanning workspace for PRD files...");
+    log("Scanning workspace for PRD files...");
     // Try multiple patterns to catch all PRD files
     const patterns = getPrdFilePatterns();
+    log("Using patterns: " + JSON.stringify(patterns));
 
     const allPrdFiles = new Set<string>();
     for (const pattern of patterns) {
+      log(`Searching with pattern: ${pattern}`);
       const files = await vscode.workspace.findFiles(pattern, "**/node_modules/**");
+      log(`  Found ${files.length} files: ${files.map((f) => f.fsPath).join(", ")}`);
       files.forEach((file) => allPrdFiles.add(file.toString()));
     }
 
     const prdFiles = Array.from(allPrdFiles).map((uriString) => vscode.Uri.parse(uriString));
-    console.log(
-      "Found PRD files:",
-      prdFiles.map((f) => f.fsPath)
-    );
+    log(`Found ${prdFiles.length} PRD files: ${prdFiles.map((f) => f.fsPath).join(", ")}`);
 
     for (const file of prdFiles) {
       try {
         const doc = await vscode.workspace.openTextDocument(file);
-        console.log("Processing PRD file:", doc.fileName);
+        log("Processing PRD file: " + doc.fileName);
+        log("  File URI: " + file.toString());
+        log("  Doc URI: " + doc.uri.toString());
         await taskManager.processDocument(doc);
 
-        // Check how many tasks were found
-        const tasks = taskManager.getTasksByDocument(file);
-        console.log(`  -> Found ${tasks.length} tasks in ${doc.fileName}`);
-      } catch (error) {
-        console.log("Error processing PRD file:", file.fsPath, error);
+        // Check how many tasks were found - use doc.uri instead of file
+        const tasks = taskManager.getTasksByDocument(doc.uri);
+        log(`  -> Found ${tasks.length} tasks in ${doc.fileName}`);
+      } catch (error: any) {
+        log("Error processing PRD file: " + file.fsPath + " - " + error.message);
       }
     }
 
     // After processing all files, log the documents in the task manager
     const documents = taskManager.getDocuments();
-    console.log(
-      "TaskManager now has documents:",
-      documents.map((d) => d.fsPath)
-    );
+    log(`TaskManager now has ${documents.length} documents: ${documents.map((d) => d.fsPath).join(", ")}`);
   };
 
   // Register commands
@@ -153,19 +167,19 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand("prd-assistant.exportReportCsv", async () => {
       const csv = await taskManager.generateProgressReportCsv();
-      const defaultUri = vscode.Uri.file('prd-progress-report.csv');
-      
+      const defaultUri = vscode.Uri.file("prd-progress-report.csv");
+
       const uri = await vscode.window.showSaveDialog({
         defaultUri,
         filters: {
-          'CSV Files': ['csv'],
-          'All Files': ['*']
+          "CSV Files": ["csv"],
+          "All Files": ["*"],
         },
-        title: 'Export Progress Report as CSV'
+        title: "Export Progress Report as CSV",
       });
 
       if (uri) {
-        await vscode.workspace.fs.writeFile(uri, Buffer.from(csv, 'utf8'));
+        await vscode.workspace.fs.writeFile(uri, Buffer.from(csv, "utf8"));
         vscode.window.showInformationMessage(`Progress report exported to ${uri.fsPath}`);
       }
     })
@@ -174,19 +188,19 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand("prd-assistant.exportReportJson", async () => {
       const json = await taskManager.generateProgressReportJson();
-      const defaultUri = vscode.Uri.file('prd-progress-report.json');
-      
+      const defaultUri = vscode.Uri.file("prd-progress-report.json");
+
       const uri = await vscode.window.showSaveDialog({
         defaultUri,
         filters: {
-          'JSON Files': ['json'],
-          'All Files': ['*']
+          "JSON Files": ["json"],
+          "All Files": ["*"],
         },
-        title: 'Export Progress Report as JSON'
+        title: "Export Progress Report as JSON",
       });
 
       if (uri) {
-        await vscode.workspace.fs.writeFile(uri, Buffer.from(json, 'utf8'));
+        await vscode.workspace.fs.writeFile(uri, Buffer.from(json, "utf8"));
         vscode.window.showInformationMessage(`Progress report exported to ${uri.fsPath}`);
       }
     })
@@ -531,7 +545,7 @@ export function activate(context: vscode.ExtensionContext) {
         // Check if file already exists
         await vscode.workspace.fs.stat(prdFileUri);
         vscode.window.showInformationMessage("PRD.md already exists in workspace root");
-        
+
         // Open the existing file
         const doc = await vscode.workspace.openTextDocument(prdFileUri);
         await vscode.window.showTextDocument(doc);
@@ -571,16 +585,16 @@ Additional notes and considerations.
 `;
 
       try {
-        await vscode.workspace.fs.writeFile(prdFileUri, Buffer.from(prdTemplate, 'utf8'));
-        
+        await vscode.workspace.fs.writeFile(prdFileUri, Buffer.from(prdTemplate, "utf8"));
+
         // Open the new file
         const doc = await vscode.workspace.openTextDocument(prdFileUri);
         await vscode.window.showTextDocument(doc);
-        
+
         // Process the document to register tasks
         await taskManager.processDocument(doc);
         treeProvider.refresh();
-        
+
         vscode.window.showInformationMessage("Created PRD.md in workspace root");
       } catch (error) {
         vscode.window.showErrorMessage(`Failed to create PRD.md: ${error}`);
@@ -590,11 +604,11 @@ Additional notes and considerations.
 
   context.subscriptions.push(
     vscode.commands.registerCommand("prd-assistant.debugScan", async () => {
-      console.log("=== DEBUG SCAN TRIGGERED ===");
+      log("=== DEBUG SCAN TRIGGERED ===");
       await scanWorkspaceForPRDs();
       treeProvider.refresh();
       const documents = taskManager.getDocuments();
-      vscode.window.showInformationMessage(`Found ${documents.length} PRD documents. Check console for details.`);
+      vscode.window.showInformationMessage(`Found ${documents.length} PRD documents. Check Output panel for details.`);
     })
   );
 
@@ -606,7 +620,6 @@ Additional notes and considerations.
       vscode.window.showInformationMessage("PRD Tasks refreshed");
     })
   );
-
 
   context.subscriptions.push(
     vscode.commands.registerCommand("prd-assistant.filterAllTasks", async () => {
@@ -968,7 +981,7 @@ Additional notes and considerations.
       await taskManager.processDocument(document);
 
       const edits: { line: number; newText: string }[] = [];
-      
+
       // Get the initial highest ID to start incrementing from
       const allTasks = taskManager.getAllTasks();
       let highestId = 100000; // Default starting ID
@@ -1009,7 +1022,7 @@ Additional notes and considerations.
 
           const indent = listItemMatch[1];
           // Generate sequential ID
-          const taskId = `PRD-${String(nextIdNumber).padStart(6, '0')}`;
+          const taskId = `PRD-${String(nextIdNumber).padStart(6, "0")}`;
           nextIdNumber++;
           const newText = `${indent}- [ ] ${content} ${taskId}`;
 
@@ -1045,7 +1058,7 @@ Additional notes and considerations.
       await taskManager.processDocument(document);
 
       const edits: { line: number; newText: string }[] = [];
-      
+
       // Get the initial highest ID to start incrementing from
       const allTasks = taskManager.getAllTasks();
       let highestId = 100000; // Default starting ID
@@ -1081,7 +1094,7 @@ Additional notes and considerations.
 
           const indent = listItemMatch[1];
           // Generate sequential ID
-          const taskId = `PRD-${String(nextIdNumber).padStart(6, '0')}`;
+          const taskId = `PRD-${String(nextIdNumber).padStart(6, "0")}`;
           nextIdNumber++;
           const newText = `${indent}- [ ] ${content} ${taskId}`;
 
@@ -1129,8 +1142,8 @@ Additional notes and considerations.
       // Parse the task line to extract components
       const taskMatch = lineText.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(PRD-\d{6})?$/);
       if (taskMatch) {
-        const [, indent, , , taskText, assignee, ] = taskMatch;
-        
+        const [, indent, , , taskText, assignee] = taskMatch;
+
         // Convert back to list item format, preserving assignee but removing checkbox and PRD ID
         let newText = `${indent}- ${taskText}`;
         if (assignee) {
@@ -1143,7 +1156,7 @@ Additional notes and considerations.
 
         // Process the document to update task tracking
         await taskManager.processDocument(document);
-        
+
         vscode.window.showInformationMessage(`Converted task ${taskId} to list item`);
       }
     })
@@ -1158,7 +1171,7 @@ Additional notes and considerations.
         if (!isPrdFile(document)) {
           return [];
         }
-        
+
         // Check if checkbox normalization is enabled
         const config = vscode.workspace.getConfiguration("prdAssistant");
         if (!config.get<boolean>("normalizeCheckboxes", true)) {
@@ -1181,11 +1194,11 @@ Additional notes and considerations.
         const config = vscode.workspace.getConfiguration("prdAssistant");
         const autoProcess = config.get<boolean>("autoProcessDocuments", true);
         const showWarnings = config.get<boolean>("showDuplicateWarnings", true);
-        
+
         if (!autoProcess) {
           return;
         }
-        
+
         // Process document and check for duplicates
         setTimeout(async () => {
           await taskManager.processDocument(event.document);
@@ -1228,10 +1241,14 @@ Additional notes and considerations.
   });
 
   // Scan workspace for PRD files on activation
-  scanWorkspaceForPRDs().then(() => {
-    console.log("Workspace scan complete, refreshing tree view");
-    treeProvider.refresh();
-  });
+  scanWorkspaceForPRDs()
+    .then(() => {
+      log("Workspace scan complete, refreshing tree view");
+      treeProvider.refresh();
+    })
+    .catch((error) => {
+      log("Error during workspace scan: " + error.message);
+    });
 
   // Process newly opened documents
   context.subscriptions.push(
@@ -1272,4 +1289,6 @@ Additional notes and considerations.
   );
 }
 
-export function deactivate() {}
+export function deactivate() {
+  // Cleanup will happen automatically via disposables
+}
