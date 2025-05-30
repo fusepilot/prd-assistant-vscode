@@ -9,9 +9,6 @@ export class PrdTaskManager {
   private idCounter = 0;
   private isProcessing = false;
 
-  private readonly taskRegex = /^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(PRD-\d{6})?$/gm;
-  private readonly taskIdRegex = /PRD-\d{6}/g;
-
   async processDocument(document: vscode.TextDocument): Promise<void> {
     // Skip if we're already processing to avoid loops
     if (this.isProcessing) {
@@ -47,7 +44,7 @@ export class PrdTaskManager {
       const taskMatch = line.match(/^(\s*)(-|\*|\d+\.)\s*\[([^\]]*)\]\s*(.*?)$/);
       if (taskMatch) {
         const [, indent, bullet, checkboxContent, restOfLine] = taskMatch;
-        
+
         // Normalize checkbox content
         let normalizedCheckbox = checkboxContent;
         if (checkboxContent === "" || checkboxContent === " " || checkboxContent === "  " || checkboxContent === "   ") {
@@ -55,25 +52,25 @@ export class PrdTaskManager {
         } else if (checkboxContent.toLowerCase() === "x" || checkboxContent === " x" || checkboxContent === "x " || checkboxContent === " x ") {
           normalizedCheckbox = "x";
         }
-        
+
         // Handle multiple or misplaced PRD IDs in the rest of the line
         let cleanedRestOfLine = restOfLine.trim();
         const prdIds = cleanedRestOfLine.match(/PRD-\d{6}/g);
-        
+
         if (prdIds && prdIds.length > 0) {
           // Remove all PRD IDs from the text
-          cleanedRestOfLine = cleanedRestOfLine.replace(/PRD-\d{6}/g, '').trim();
+          cleanedRestOfLine = cleanedRestOfLine.replace(/PRD-\d{6}/g, "").trim();
           // Remove extra spaces that might be left behind
           // Only normalize consecutive spaces between words, not within words
           // This prevents breaking words that might have accidental spaces while typing
-          cleanedRestOfLine = cleanedRestOfLine.replace(/(\s)\s+/g, '$1').trim();
+          cleanedRestOfLine = cleanedRestOfLine.replace(/(\s)\s+/g, "$1").trim();
           // Add back only one ID at the end
           cleanedRestOfLine = `${cleanedRestOfLine} ${prdIds[0]}`;
         }
-        
+
         // Build normalized line with consistent single spacing
         const normalizedLine = `${indent}- [${normalizedCheckbox}] ${cleanedRestOfLine}`;
-        
+
         if (normalizedLine !== line) {
           line = normalizedLine;
           lines[i] = line;
@@ -449,7 +446,7 @@ export class PrdTaskManager {
         const nextLineIsHeader = nextLine.match(/^#{1,6}\s+/);
         shouldAddEmptyLineAfter = !nextLineIsTask && !nextLineIsHeader;
       }
-      
+
       // Special case: if we're inserting right before a section header, ensure empty line
       if (foundNextSection && nextLineExists) {
         const nextLine = lines[insertLine + 1];
@@ -493,7 +490,9 @@ export class PrdTaskManager {
 
   async assignTask(taskId: string, assignee: string): Promise<void> {
     const task = this.taskById.get(taskId);
-    if (!task) {return;}
+    if (!task) {
+      return;
+    }
 
     // Read the file content directly without opening in editor
     const fileContent = await vscode.workspace.fs.readFile(task.document);
@@ -546,12 +545,16 @@ export class PrdTaskManager {
 
     this.taskById.forEach((task) => {
       totalTasks++;
-      if (task.completed) {completedTasks++;}
+      if (task.completed) {
+        completedTasks++;
+      }
 
       if (task.assignee) {
         const stats = tasksByAssignee.get(task.assignee) || { total: 0, completed: 0 };
         stats.total++;
-        if (task.completed) {stats.completed++;}
+        if (task.completed) {
+          stats.completed++;
+        }
         tasksByAssignee.set(task.assignee, stats);
       }
     });
@@ -582,29 +585,29 @@ export class PrdTaskManager {
 
   async generateProgressReportCsv(): Promise<string> {
     const tasks = this.getAllTasks();
-    const headers = ['Task ID', 'Description', 'Completed', 'Assignee', 'File', 'Line', 'Headers'];
-    
+    const headers = ["Task ID", "Description", "Completed", "Assignee", "File", "Line", "Headers"];
+
     // Escape CSV field if it contains comma, quote, or newline
     const escapeCsvField = (field: string): string => {
-      if (field.includes(',') || field.includes('"') || field.includes('\n')) {
+      if (field.includes(",") || field.includes('"') || field.includes("\n")) {
         return `"${field.replace(/"/g, '""')}"`;
       }
       return field;
     };
 
-    let csv = headers.join(',') + '\n';
-    
+    let csv = headers.join(",") + "\n";
+
     for (const task of tasks) {
       const row = [
         escapeCsvField(task.id),
         escapeCsvField(task.text),
-        task.completed ? 'TRUE' : 'FALSE',
-        escapeCsvField(task.assignee || ''),
-        escapeCsvField(task.document ? task.document.fsPath : ''),
+        task.completed ? "TRUE" : "FALSE",
+        escapeCsvField(task.assignee || ""),
+        escapeCsvField(task.document ? task.document.fsPath : ""),
         task.line.toString(),
-        escapeCsvField(task.headers ? task.headers.map(h => h.text).join(' > ') : '')
+        escapeCsvField(task.headers ? task.headers.map((h) => h.text).join(" > ") : ""),
       ];
-      csv += row.join(',') + '\n';
+      csv += row.join(",") + "\n";
     }
 
     return csv;
@@ -613,7 +616,7 @@ export class PrdTaskManager {
   async generateProgressReportJson(): Promise<string> {
     const tasks = this.getAllTasks();
     const totalTasks = tasks.length;
-    const completedTasks = tasks.filter(t => t.completed).length;
+    const completedTasks = tasks.filter((t) => t.completed).length;
     const tasksByAssignee = new Map<string, { total: number; completed: number; tasks: string[] }>();
     const tasksByFile = new Map<string, { total: number; completed: number; tasks: string[] }>();
 
@@ -649,33 +652,33 @@ export class PrdTaskManager {
         totalTasks,
         completedTasks,
         remainingTasks: totalTasks - completedTasks,
-        completionPercentage: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
+        completionPercentage: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
       },
       byAssignee: Array.from(tasksByAssignee.entries()).map(([assignee, stats]) => ({
         assignee,
         total: stats.total,
         completed: stats.completed,
         percentage: Math.round((stats.completed / stats.total) * 100),
-        taskIds: stats.tasks
+        taskIds: stats.tasks,
       })),
       byFile: Array.from(tasksByFile.entries()).map(([file, stats]) => ({
         file,
         total: stats.total,
         completed: stats.completed,
         percentage: Math.round((stats.completed / stats.total) * 100),
-        taskIds: stats.tasks
+        taskIds: stats.tasks,
       })),
-      tasks: tasks.map(task => ({
+      tasks: tasks.map((task) => ({
         id: task.id,
         text: task.text,
         completed: task.completed,
         assignee: task.assignee || null,
         file: task.document ? task.document.fsPath : null,
         line: task.line,
-        headers: task.headers ? task.headers.map(h => ({ level: h.level, text: h.text, line: h.line })) : [],
-        children: task.children.map(child => child.id),
-        parent: task.parent || null
-      }))
+        headers: task.headers ? task.headers.map((h) => ({ level: h.level, text: h.text, line: h.line })) : [],
+        children: task.children.map((child) => child.id),
+        parent: task.parent || null,
+      })),
     };
 
     return JSON.stringify(report, null, 2);
@@ -692,7 +695,7 @@ export class PrdTaskManager {
   }
 
   getDocuments(): vscode.Uri[] {
-    return Array.from(this.tasks.keys()).map(uriString => vscode.Uri.parse(uriString));
+    return Array.from(this.tasks.keys()).map((uriString) => vscode.Uri.parse(uriString));
   }
 
   getTaskById(taskId: string): PrdTask | undefined {
@@ -910,7 +913,7 @@ export class PrdTaskManager {
   private generateTaskId(): string {
     const config = vscode.workspace.getConfiguration("prdManager");
     const idFormat = config.get<string>("idFormat", "sequential");
-    
+
     if (idFormat === "sequential") {
       // First try to use smart incremental ID based on highest existing ID
       const smartId = this.generateIncrementalTaskId();
@@ -1010,7 +1013,7 @@ export class PrdTaskManager {
 
       if (match) {
         const [, indent, bullet, checkboxContent, restOfLine] = match;
-        
+
         // Normalize checkbox content
         let normalizedCheckbox = checkboxContent;
         if (checkboxContent === "" || checkboxContent === " " || checkboxContent === "  " || checkboxContent === "   ") {
@@ -1018,22 +1021,22 @@ export class PrdTaskManager {
         } else if (checkboxContent.toLowerCase() === "x" || checkboxContent === " x" || checkboxContent === "x " || checkboxContent === " x ") {
           normalizedCheckbox = "x";
         }
-        
+
         // Handle multiple or misplaced PRD IDs in the rest of the line
         let cleanedRestOfLine = restOfLine.trim();
         const prdIds = cleanedRestOfLine.match(/PRD-\d{6}/g);
-        
+
         if (prdIds && prdIds.length > 0) {
           // Remove all PRD IDs from the text
-          cleanedRestOfLine = cleanedRestOfLine.replace(/PRD-\d{6}/g, '').trim();
+          cleanedRestOfLine = cleanedRestOfLine.replace(/PRD-\d{6}/g, "").trim();
           // Remove extra spaces that might be left behind
           // Only normalize consecutive spaces between words, not within words
           // This prevents breaking words that might have accidental spaces while typing
-          cleanedRestOfLine = cleanedRestOfLine.replace(/(\s)\s+/g, '$1').trim();
+          cleanedRestOfLine = cleanedRestOfLine.replace(/(\s)\s+/g, "$1").trim();
           // Add back only one ID at the end
           cleanedRestOfLine = `${cleanedRestOfLine} ${prdIds[0]}`;
         }
-        
+
         // Build normalized line with consistent single spacing
         // Always use dash (-) and ensure single spaces
         const normalizedLine = `${indent}- [${normalizedCheckbox}] ${cleanedRestOfLine}`;

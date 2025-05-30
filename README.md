@@ -2,6 +2,18 @@
 
 Transform your Product Requirements Documents into interactive, trackable project dashboards.
 
+## 📸 Screenshots
+
+### PRD Explorer Tree View
+![PRD Explorer](images/prd-explorer.png)
+
+The PRD Explorer provides a hierarchical view of all your tasks organized by headers, with completion percentages and progress indicators.
+
+### CodeLens Integration
+![CodeLens Actions](images/prd-codelens.png)
+
+Inline CodeLens actions let you interact with tasks directly in the editor - toggle completion, assign users, copy IDs, and view statistics.
+
 ## 🎯 Features
 
 ### ✅ Interactive Task Management

@@ -7,6 +7,14 @@
   "author": "Michael Delaney",
   "icon": "images/icon.png",
   "license": "MIT",
+  "homepage": "https://github.com/fusepilot/prd-manager-vscode#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fusepilot/prd-manager-vscode"
+  },
+  "bugs": {
+    "url": "https://github.com/fusepilot/prd-manager-vscode/issues"
+  },
   "keywords": [
     "prd",
     "product-requirements",
