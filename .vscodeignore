@@ -1,3 +1,4 @@
+# Development files
 .vscode/**
 .vscode-test/**
 src/**
@@ -9,3 +10,28 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 **/.vscode-test.*
+
+# Documentation and development files not needed in published extension
+CLAUDE.md
+PRD.md
+PUBLISH.md
+sample-PRD.md
+test-conversion.md
+.claude/**
+
+# Build directories that should be excluded
+dist/**
+
+# Node modules should be included for dependencies, but dev dependencies excluded
+# (handled automatically by vsce)
+
+# Keep these files:
+# - README.md (needed for marketplace)
+# - CHANGELOG.md (needed for marketplace)
+# - LICENSE.txt (needed for marketplace)
+# - package.json (needed)
+# - images/** (needed for screenshots/icons)
+# - out/** (compiled extension code)
+# - node_modules/** (runtime dependencies only)
+# - syntaxes/** (needed for syntax highlighting)
+# - language-configuration.json (needed)
