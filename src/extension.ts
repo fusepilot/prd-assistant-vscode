@@ -1,4 +1,6 @@
 import * as vscode from "vscode";
+import * as path from "path";
+import { minimatch } from "minimatch";
 import { PrdTreeProvider } from "./providers/prdTreeProvider";
 import { PrdDocumentLinkProvider } from "./providers/prdDocumentLinkProvider";
 import { PrdCodeLensProvider } from "./providers/prdCodeLensProvider";
@@ -1285,6 +1287,91 @@ Additional notes and considerations.
       if (event.affectsConfiguration("prdAssistant.taskFilter")) {
         treeProvider.refresh();
       }
+    })
+  );
+
+  // Watch for file deletions and renames
+  // Use a more targeted watcher pattern based on the search depth setting
+  const config = vscode.workspace.getConfiguration('prdAssistant');
+  const searchDepth = config.get<number>('searchSubdirectoriesDepth', 1);
+  let watcherPattern: string;
+  
+  if (searchDepth === 0) {
+    watcherPattern = "*.md";
+  } else if (searchDepth >= 99) {
+    watcherPattern = "**/*.md";
+  } else {
+    // Create a pattern that matches up to the specified depth
+    // For depth 1: {*.md,*/*.md}, for depth 2: {*.md,*/*.md,*/*/*.md}, etc.
+    const patterns = ["*.md"];
+    for (let depth = 1; depth <= searchDepth; depth++) {
+      patterns.push('*/'.repeat(depth) + "*.md");
+    }
+    watcherPattern = `{${patterns.join(',')}}`;
+  }
+  
+  const fileWatcher = vscode.workspace.createFileSystemWatcher(watcherPattern);
+  context.subscriptions.push(fileWatcher);
+  
+  // Helper function to check if a file is a PRD based on its name
+  const isPrdByName = (filename: string, filePath: string): boolean => {
+    const config = vscode.workspace.getConfiguration('prdAssistant');
+    const patterns = config.get<string[]>('filePatterns', ['*prd*.md', 'PRD*.md', '*PRD*.md']);
+    const additionalFiles = config.get<string[]>('additionalFiles', []);
+    
+    return patterns.some(pattern => {
+      return minimatch(filename, pattern, { nocase: true });
+    }) || additionalFiles.some(file => {
+      return filename === file || filePath.endsWith(file);
+    });
+  };
+  
+  context.subscriptions.push(
+    fileWatcher.onDidDelete((uri) => {
+      // Check if the deleted file was a PRD file
+      const filename = path.basename(uri.fsPath);
+      
+      if (isPrdByName(filename, uri.fsPath)) {
+        log(`PRD file deleted: ${uri.fsPath}`);
+        taskManager.removeDocument(uri);
+        treeProvider.refresh();
+      }
+    })
+  );
+  
+  // Handle file renames - if a PRD file is renamed to a non-PRD name, remove it
+  context.subscriptions.push(
+    vscode.workspace.onDidRenameFiles((event) => {
+      event.files.forEach(({ oldUri, newUri }) => {
+        const oldFilename = path.basename(oldUri.fsPath);
+        const newFilename = path.basename(newUri.fsPath);
+        
+        const wasPRD = isPrdByName(oldFilename, oldUri.fsPath);
+        const isPRD = isPrdByName(newFilename, newUri.fsPath);
+        
+        if (wasPRD && !isPRD) {
+          // File was renamed from PRD to non-PRD
+          log(`PRD file renamed to non-PRD: ${oldUri.fsPath} -> ${newUri.fsPath}`);
+          taskManager.removeDocument(oldUri);
+          treeProvider.refresh();
+        } else if (!wasPRD && isPRD) {
+          // File was renamed from non-PRD to PRD
+          log(`Non-PRD file renamed to PRD: ${oldUri.fsPath} -> ${newUri.fsPath}`);
+          // Process the new PRD file
+          vscode.workspace.openTextDocument(newUri).then(doc => {
+            taskManager.processDocument(doc);
+            treeProvider.refresh();
+          });
+        } else if (wasPRD && isPRD) {
+          // PRD file renamed to another PRD name - update the URI
+          log(`PRD file renamed: ${oldUri.fsPath} -> ${newUri.fsPath}`);
+          taskManager.removeDocument(oldUri);
+          vscode.workspace.openTextDocument(newUri).then(doc => {
+            taskManager.processDocument(doc);
+            treeProvider.refresh();
+          });
+        }
+      });
     })
   );
 }

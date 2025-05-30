@@ -198,6 +198,12 @@ Configure PRD Assistant through VSCode settings:
 - `prdAssistant.filePatterns`: File patterns to identify PRD files (default: `["*prd*.md", "PRD*.md", "*PRD*.md"]`)
 - `prdAssistant.additionalFiles`: Specific files to enhance with PRD features (default: `[]`)
   - Example: `["CLAUDE.md", "TODO.md", "TASKS.md"]`
+- `prdAssistant.searchSubdirectoriesDepth`: Maximum directory depth to search (default: `1`)
+  - `0`: Only workspace root
+  - `1`: Root + immediate child folders (default)
+  - `2`: Root + 2 levels deep
+  - `99`: Search all subdirectories
+  - **Performance**: Lower values improve performance in large projects
 
 ### Behavior Settings
 
@@ -245,6 +251,13 @@ Automatically fixes common checkbox formatting issues:
 - Task IDs might regenerate if file is edited outside VSCode
 - Large files (>1000 tasks) may have performance impact
 - Deep links only work within the same workspace
+
+## ⚡ Performance Tips
+
+- **Large Projects**: Use `prdAssistant.searchSubdirectoriesDepth: 0` to search only workspace root for maximum performance
+- **Medium Projects**: Default depth of `1` provides good balance between performance and coverage
+- **File Organization**: Place PRD files in the workspace root or immediate child folders for optimal performance
+- **Deep Structures**: Use `additionalFiles` to explicitly list PRD files in deep subdirectories instead of increasing search depth
 
 ## 📝 Release Notes
 

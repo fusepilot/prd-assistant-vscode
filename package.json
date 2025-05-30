@@ -568,6 +568,14 @@
           "type": "boolean",
           "default": true,
           "description": "Enable visual decorations for tasks and assignees"
+        },
+        "prdAssistant.searchSubdirectoriesDepth": {
+          "type": "number",
+          "default": 1,
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Maximum directory depth to search for PRD files",
+          "markdownDescription": "Controls how deep to search for PRD files:\n- `0`: Only workspace root\n- `1`: Root + immediate child folders (default)\n- `2`: Root + 2 levels deep\n- `99`: Search all subdirectories (equivalent to `**/pattern`)\n\nHigher values may impact performance in large projects."
         }
       }
     },

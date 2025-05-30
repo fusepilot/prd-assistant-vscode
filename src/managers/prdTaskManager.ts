@@ -9,6 +9,22 @@ export class PrdTaskManager {
   private idCounter = 0;
   private isProcessing = false;
 
+  removeDocument(uri: vscode.Uri): void {
+    const uriString = uri.toString();
+    
+    // Remove all tasks for this document
+    const documentTasks = this.tasks.get(uriString) || [];
+    documentTasks.forEach((task) => this.taskById.delete(task.id));
+    
+    // Remove the document from the tasks map
+    this.tasks.delete(uriString);
+    
+    console.log(`Removed document and its tasks: ${uri.fsPath}`);
+    
+    // Fire the change event to update the tree view
+    this._onTasksChanged.fire();
+  }
+
   async processDocument(document: vscode.TextDocument): Promise<void> {
     // Skip if we're already processing to avoid loops
     if (this.isProcessing) {

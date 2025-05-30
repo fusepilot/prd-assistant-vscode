@@ -84,6 +84,16 @@ This is a VSCode extension for managing Product Requirements Documents (PRDs) wi
 - Use ES2022 features as configured in tsconfig.json
 - Follow the existing modular structure when adding new providers/features
 
+### Performance Considerations
+
+**Large Project Support**: By default, the extension searches for PRD files in the workspace root directory and immediate child folders (`searchSubdirectoriesDepth: 1`) for optimal performance. Users can adjust the search depth:
+- `0`: Only workspace root (fastest)
+- `1`: Root + immediate child folders (default, good balance)
+- `2+`: Deeper search (may impact performance)
+- `99`: Search all subdirectories (equivalent to `**/pattern`)
+
+**File Watching**: File watchers are optimized based on the search depth - patterns are generated to match only the specified depth levels, reducing file system monitoring overhead.
+
 ### Checkbox Normalization
 
 The extension provides automatic checkbox normalization to fix improperly formatted checkboxes:
