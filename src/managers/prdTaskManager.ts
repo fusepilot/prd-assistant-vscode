@@ -90,10 +90,31 @@ export class PrdTaskManager {
         continue;
       }
 
-      const match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(PRD-\d{6})?$/);
+      // Try to match different task formats:
+      // 1. "task text @assignee PRD-ID" (most common in sample-PRD.md)
+      let match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)\s+@([\w-]+(?:-copilot)?)\s+(PRD-\d{6})$/);
+      
+      if (!match) {
+        // 2. "task text PRD-ID @assignee" or "task text PRD-ID" (no assignee)
+        match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)\s+(PRD-\d{6})(?:\s+@([\w-]+(?:-copilot)?))?$/);
+      }
 
       if (match) {
-        const [, indent, bullet, checked, textContent, assignee, existingId] = match;
+        let assignee: string | undefined;
+        let existingId: string | undefined;
+        let textContent: string;
+        let indent: string;
+        let bullet: string;
+        let checked: string;
+        
+        // Check which pattern matched by counting groups
+        if (match.length === 7 && match[5] && match[6] && !match[6].startsWith('PRD-')) {
+          // Format: "task text @assignee PRD-ID" (6 groups + full match = 7)
+          [, indent, bullet, checked, textContent, assignee, existingId] = match;
+        } else {
+          // Format: "task text PRD-ID @assignee" or "task text PRD-ID" (no assignee)
+          [, indent, bullet, checked, textContent, existingId, assignee] = match;
+        }
         let taskId = existingId;
         let text = textContent;
 
