@@ -37,7 +37,7 @@ export class PrdConversionCodeLensProvider implements vscode.CodeLensProvider {
       codeLenses.push(
         new vscode.CodeLens(new vscode.Range(0, 0, 0, 0), {
           title: `Convert All List Items to Tasks (${convertibleItems.length} items)`,
-          command: "prd-manager.convertAllListItems",
+          command: "prd-assistant.convertAllListItems",
           arguments: [document.uri]
         })
       );
@@ -61,7 +61,7 @@ export class PrdConversionCodeLensProvider implements vscode.CodeLensProvider {
           codeLenses.push(
             new vscode.CodeLens(range, {
               title: `Convert Section List Items to Tasks (${headerItems.length} items)`,
-              command: "prd-manager.convertSectionListItems", 
+              command: "prd-assistant.convertSectionListItems", 
               arguments: [document.uri, i]
             })
           );
@@ -75,7 +75,7 @@ export class PrdConversionCodeLensProvider implements vscode.CodeLensProvider {
         codeLenses.push(
           new vscode.CodeLens(range, {
             title: "Convert to Task",
-            command: "prd-manager.convertListItem",
+            command: "prd-assistant.convertListItem",
             arguments: [document.uri, i]
           })
         );

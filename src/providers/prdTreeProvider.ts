@@ -46,7 +46,7 @@ export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string
       
       // Add command to open the document
       item.command = {
-        command: "prd-manager.openDocument",
+        command: "prd-assistant.openDocument",
         title: "Open Document",
         arguments: [element],
       };
@@ -135,7 +135,7 @@ export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string
 
       // Add command to toggle on click
       item.command = {
-        command: "prd-manager.toggleTask",
+        command: "prd-assistant.toggleTask",
         title: "Toggle Task",
         arguments: [task.id],
       };

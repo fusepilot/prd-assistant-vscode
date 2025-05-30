@@ -24,7 +24,7 @@ export class PrdQuickFixProvider implements vscode.CodeActionProvider {
 
     // Look for duplicate task ID diagnostics
     for (const diagnostic of context.diagnostics) {
-      if (diagnostic.code === 'duplicate-task-id' && diagnostic.source === 'PRD Manager') {
+      if (diagnostic.code === 'duplicate-task-id' && diagnostic.source === 'PRD Assistant') {
         const action = await this.createFixDuplicateIdAction(document, diagnostic);
         if (action) {
           actions.push(action);

@@ -66,7 +66,7 @@ export class PrdCodeLensProvider implements vscode.CodeLensProvider {
         codeLenses.push(
           new vscode.CodeLens(range, {
             title: "Add Task",
-            command: "prd-manager.addTaskToHeader",
+            command: "prd-assistant.addTaskToHeader",
             arguments: [i, level, headerText],
           })
         );
@@ -77,7 +77,7 @@ export class PrdCodeLensProvider implements vscode.CodeLensProvider {
           codeLenses.push(
             new vscode.CodeLens(range, {
               title: "Copy Uncompleted Task List",
-              command: "prd-manager.copyTaskList",
+              command: "prd-assistant.copyTaskList",
               arguments: [tasksUnderHeader],
             })
           );
@@ -96,7 +96,7 @@ export class PrdCodeLensProvider implements vscode.CodeLensProvider {
         codeLenses.push(
         new vscode.CodeLens(range, {
           title: task.completed ? "Completed" : "Mark Complete",
-          command: "prd-manager.toggleTask",
+          command: "prd-assistant.toggleTask",
           arguments: [task.id],
         })
       );
@@ -106,7 +106,7 @@ export class PrdCodeLensProvider implements vscode.CodeLensProvider {
       codeLenses.push(
         new vscode.CodeLens(range, {
           title: task.assignee ? `Assigned to ${task.assignee}` : "Assign Task",
-          command: "prd-manager.assignTask",
+          command: "prd-assistant.assignTask",
           arguments: [task.id],
         })
       );
@@ -116,7 +116,7 @@ export class PrdCodeLensProvider implements vscode.CodeLensProvider {
       codeLenses.push(
         new vscode.CodeLens(range, {
           title: "Copy Link",
-          command: "prd-manager.copyDeepLink",
+          command: "prd-assistant.copyDeepLink",
           arguments: [task.id],
         })
       );
@@ -128,7 +128,7 @@ export class PrdCodeLensProvider implements vscode.CodeLensProvider {
         codeLenses.push(
           new vscode.CodeLens(range, {
             title: "Add Subtask",
-            command: "prd-manager.addTaskToTask",
+            command: "prd-assistant.addTaskToTask",
             arguments: [task],
           })
         );
@@ -149,7 +149,7 @@ export class PrdCodeLensProvider implements vscode.CodeLensProvider {
       codeLenses.push(
         new vscode.CodeLens(range, {
           title: "Deconvert",
-          command: "prd-manager.deconvertTask",
+          command: "prd-assistant.deconvertTask",
           arguments: [task.id],
         })
       );

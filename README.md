@@ -1,4 +1,4 @@
-# PRD Manager - VSCode Extension
+# PRD Assistant - VSCode Extension
 
 Transform your Product Requirements Documents into interactive, trackable project dashboards.
 
@@ -71,7 +71,7 @@ Get instant visibility into project progress with multiple views.
 
 1. Open VSCode
 2. Go to Extensions (Ctrl+Shift+X)
-3. Search for "PRD Manager"
+3. Search for "PRD Assistant"
 4. Click Install
 
 ### First Use
@@ -93,7 +93,7 @@ Get instant visibility into project progress with multiple views.
 
 ### Supported File Patterns
 
-By default, PRD Manager activates for files matching:
+By default, PRD Assistant activates for files matching:
 
 - `*prd*.md`
 - `PRD*.md`
@@ -149,7 +149,7 @@ npm run clean       # Remove build artifacts
 ### Project Structure
 
 ```
-prd-manager/
+prd-assistant/
 ├── src/
 │   ├── extension.ts                           # Main extension entry point
 │   ├── managers/
@@ -177,40 +177,40 @@ prd-manager/
 
 ## ⚙️ Extension Settings
 
-Configure PRD Manager through VSCode settings:
+Configure PRD Assistant through VSCode settings:
 
 ### Core Settings
 
-- `prdManager.autoGenerateIds`: Automatically generate task IDs (default: `true`)
-- `prdManager.taskIdPrefix`: Prefix for generated task IDs (default: `"PRD"`)
-- `prdManager.idFormat`: ID generation strategy - `"sequential"` or `"timestamp"` (default: `"sequential"`)
+- `prdAssistant.autoGenerateIds`: Automatically generate task IDs (default: `true`)
+- `prdAssistant.taskIdPrefix`: Prefix for generated task IDs (default: `"PRD"`)
+- `prdAssistant.idFormat`: ID generation strategy - `"sequential"` or `"timestamp"` (default: `"sequential"`)
 
 ### Display Settings
 
-- `prdManager.showCodeLens`: Show inline task actions (default: `true`)
-- `prdManager.enableCodeLensForHeaders`: Show stats and 'Add Task' on headers (default: `true`)
-- `prdManager.enableCodeLensForTasks`: Show action buttons on tasks (default: `true`)
-- `prdManager.enableConversionCodeLens`: Show 'Convert to Task' on list items (default: `true`)
-- `prdManager.showProgressInTreeView`: Display completion percentages (default: `true`)
+- `prdAssistant.showCodeLens`: Show inline task actions (default: `true`)
+- `prdAssistant.enableCodeLensForHeaders`: Show stats and 'Add Task' on headers (default: `true`)
+- `prdAssistant.enableCodeLensForTasks`: Show action buttons on tasks (default: `true`)
+- `prdAssistant.enableConversionCodeLens`: Show 'Convert to Task' on list items (default: `true`)
+- `prdAssistant.showProgressInTreeView`: Display completion percentages (default: `true`)
 
 ### File Detection
 
-- `prdManager.filePatterns`: File patterns to identify PRD files (default: `["*prd*.md", "PRD*.md", "*PRD*.md"]`)
-- `prdManager.additionalFiles`: Specific files to enhance with PRD features (default: `[]`)
+- `prdAssistant.filePatterns`: File patterns to identify PRD files (default: `["*prd*.md", "PRD*.md", "*PRD*.md"]`)
+- `prdAssistant.additionalFiles`: Specific files to enhance with PRD features (default: `[]`)
   - Example: `["CLAUDE.md", "TODO.md", "TASKS.md"]`
 
 ### Behavior Settings
 
-- `prdManager.normalizeCheckboxes`: Auto-fix checkbox formatting on save (default: `true`)
-- `prdManager.autoProcessDocuments`: Auto-process PRD files when opened (default: `true`)
-- `prdManager.showDuplicateWarnings`: Show warnings for duplicate task IDs (default: `true`)
-- `prdManager.enableQuickFixes`: Enable auto-fixes for duplicates (default: `true`)
+- `prdAssistant.normalizeCheckboxes`: Auto-fix checkbox formatting on save (default: `true`)
+- `prdAssistant.autoProcessDocuments`: Auto-process PRD files when opened (default: `true`)
+- `prdAssistant.showDuplicateWarnings`: Show warnings for duplicate task IDs (default: `true`)
+- `prdAssistant.enableQuickFixes`: Enable auto-fixes for duplicates (default: `true`)
 
 ### Visual Enhancement
 
-- `prdManager.decorateAssignees`: Highlight @-mentions (default: `true`)
-- `prdManager.decorateDeepLinks`: Make task IDs clickable (default: `true`)
-- `prdManager.enableDecorations`: Enable visual decorations (default: `true`)
+- `prdAssistant.decorateAssignees`: Highlight @-mentions (default: `true`)
+- `prdAssistant.decorateDeepLinks`: Make task IDs clickable (default: `true`)
+- `prdAssistant.enableDecorations`: Enable visual decorations (default: `true`)
 
 ## 🔧 Key Features Explained
 
@@ -279,5 +279,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙋‍♀️ Support
 
-- **Issues**: [GitHub Issues](https://github.com/fusepilot/prd-manager-vscode/issues)
+- **Issues**: [GitHub Issues](https://github.com/fusepilot/prd-assistant-vscode/issues)
 - **Documentation**: Check this README and the extension's built-in help

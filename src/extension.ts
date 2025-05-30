@@ -9,7 +9,7 @@ import { PrdQuickFixProvider } from "./providers/prdQuickFixProvider";
 import { isPrdFile, getPrdFilePatterns } from "./utils/prdUtils";
 
 export function activate(context: vscode.ExtensionContext) {
-  console.log("PRD Manager extension is now active!");
+  console.log("PRD Assistant extension is now active!");
 
   // Initialize the task manager
   const taskManager = new PrdTaskManager();
@@ -18,9 +18,9 @@ export function activate(context: vscode.ExtensionContext) {
   const updatePrdFileContext = (editor: vscode.TextEditor | undefined) => {
     if (editor && editor.document) {
       const isPrd = isPrdFile(editor.document);
-      vscode.commands.executeCommand('setContext', 'prdManager.isPrdFile', isPrd);
+      vscode.commands.executeCommand('setContext', 'prdAssistant.isPrdFile', isPrd);
     } else {
-      vscode.commands.executeCommand('setContext', 'prdManager.isPrdFile', false);
+      vscode.commands.executeCommand('setContext', 'prdAssistant.isPrdFile', false);
     }
   };
   
@@ -115,7 +115,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Register commands
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.toggleTask", async (item?: any) => {
+    vscode.commands.registerCommand("prd-assistant.toggleTask", async (item?: any) => {
       let taskId: string | undefined;
 
       // Handle different input types
@@ -140,7 +140,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.generateReport", async () => {
+    vscode.commands.registerCommand("prd-assistant.generateReport", async () => {
       const report = await taskManager.generateProgressReport();
       const doc = await vscode.workspace.openTextDocument({
         content: report,
@@ -151,7 +151,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.exportReportCsv", async () => {
+    vscode.commands.registerCommand("prd-assistant.exportReportCsv", async () => {
       const csv = await taskManager.generateProgressReportCsv();
       const defaultUri = vscode.Uri.file('prd-progress-report.csv');
       
@@ -172,7 +172,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.exportReportJson", async () => {
+    vscode.commands.registerCommand("prd-assistant.exportReportJson", async () => {
       const json = await taskManager.generateProgressReportJson();
       const defaultUri = vscode.Uri.file('prd-progress-report.json');
       
@@ -193,7 +193,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.addTask", async () => {
+    vscode.commands.registerCommand("prd-assistant.addTask", async () => {
       const editor = vscode.window.activeTextEditor;
       if (!editor) {
         vscode.window.showErrorMessage("No active editor");
@@ -217,7 +217,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.addTaskAtCursor", async () => {
+    vscode.commands.registerCommand("prd-assistant.addTaskAtCursor", async () => {
       const editor = vscode.window.activeTextEditor;
       if (!editor) {
         vscode.window.showErrorMessage("No active editor");
@@ -241,7 +241,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.addTaskToHeader", async (headerLine: number | string, headerLevel?: number, headerText?: string) => {
+    vscode.commands.registerCommand("prd-assistant.addTaskToHeader", async (headerLine: number | string, headerLevel?: number, headerText?: string) => {
       const editor = vscode.window.activeTextEditor;
       if (!editor) {
         vscode.window.showErrorMessage("No active editor");
@@ -298,7 +298,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.addTaskToTask", async (item: any) => {
+    vscode.commands.registerCommand("prd-assistant.addTaskToTask", async (item: any) => {
       if (!item || !item.id) {
         vscode.window.showErrorMessage("No task selected");
         return;
@@ -391,7 +391,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.copyTaskList", async (tasks: any[]) => {
+    vscode.commands.registerCommand("prd-assistant.copyTaskList", async (tasks: any[]) => {
       if (!tasks || tasks.length === 0) {
         vscode.window.showInformationMessage("No tasks to copy");
         return;
@@ -414,7 +414,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.assignTask", async (item?: any) => {
+    vscode.commands.registerCommand("prd-assistant.assignTask", async (item?: any) => {
       let taskId: string | undefined;
 
       // Handle different input types
@@ -479,7 +479,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.copyDeepLink", async (taskId?: string) => {
+    vscode.commands.registerCommand("prd-assistant.copyDeepLink", async (taskId?: string) => {
       if (!taskId) {
         const editor = vscode.window.activeTextEditor;
         if (editor) {
@@ -495,7 +495,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.openPrdFile", async () => {
+    vscode.commands.registerCommand("prd-assistant.openPrdFile", async () => {
       // Get the first PRD file from the task manager
       const allTasks = taskManager.getAllTasks();
       if (allTasks.length > 0) {
@@ -516,7 +516,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.createPrdFile", async () => {
+    vscode.commands.registerCommand("prd-assistant.createPrdFile", async () => {
       // Check if PRD.md already exists in workspace root
       const workspaceFolders = vscode.workspace.workspaceFolders;
       if (!workspaceFolders || workspaceFolders.length === 0) {
@@ -589,7 +589,7 @@ Additional notes and considerations.
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.debugScan", async () => {
+    vscode.commands.registerCommand("prd-assistant.debugScan", async () => {
       console.log("=== DEBUG SCAN TRIGGERED ===");
       await scanWorkspaceForPRDs();
       treeProvider.refresh();
@@ -599,7 +599,7 @@ Additional notes and considerations.
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.refreshTasks", async () => {
+    vscode.commands.registerCommand("prd-assistant.refreshTasks", async () => {
       // Rescan workspace for PRD files
       await scanWorkspaceForPRDs();
       treeProvider.refresh();
@@ -609,7 +609,7 @@ Additional notes and considerations.
 
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.filterAllTasks", async () => {
+    vscode.commands.registerCommand("prd-assistant.filterAllTasks", async () => {
       // Try workspace first, fallback to global
       const target = vscode.workspace.workspaceFolders ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global;
       await vscode.workspace.getConfiguration("prdManager").update("taskFilter", "all", target);
@@ -619,7 +619,7 @@ Additional notes and considerations.
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.filterCompletedTasks", async () => {
+    vscode.commands.registerCommand("prd-assistant.filterCompletedTasks", async () => {
       // Try workspace first, fallback to global
       const target = vscode.workspace.workspaceFolders ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global;
       await vscode.workspace.getConfiguration("prdManager").update("taskFilter", "completed", target);
@@ -629,7 +629,7 @@ Additional notes and considerations.
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.filterUncompletedTasks", async () => {
+    vscode.commands.registerCommand("prd-assistant.filterUncompletedTasks", async () => {
       // Try workspace first, fallback to global
       const target = vscode.workspace.workspaceFolders ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global;
       await vscode.workspace.getConfiguration("prdManager").update("taskFilter", "uncompleted", target);
@@ -639,7 +639,7 @@ Additional notes and considerations.
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.copyTaskId", async (item: any) => {
+    vscode.commands.registerCommand("prd-assistant.copyTaskId", async (item: any) => {
       let taskId: string | undefined;
 
       if (typeof item === "string") {
@@ -656,7 +656,7 @@ Additional notes and considerations.
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.copyTaskText", async (item: any) => {
+    vscode.commands.registerCommand("prd-assistant.copyTaskText", async (item: any) => {
       if (item && item.text && item.id) {
         const textWithId = `${item.text} ${item.id}`;
         await vscode.env.clipboard.writeText(textWithId);
@@ -666,7 +666,7 @@ Additional notes and considerations.
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.copyHeaderTasksContext", async (header: string) => {
+    vscode.commands.registerCommand("prd-assistant.copyHeaderTasksContext", async (header: string) => {
       // Same logic as copyHeaderTasks but for context menu
       if (typeof header === "string") {
         const allTasks = taskManager.getAllTasks();
@@ -695,7 +695,7 @@ Additional notes and considerations.
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.copyHeaderTasks", async (header: string) => {
+    vscode.commands.registerCommand("prd-assistant.copyHeaderTasks", async (header: string) => {
       if (typeof header === "string") {
         const allTasks = taskManager.getAllTasks();
         const headerText = header.replace(/^#+\s+/, "");
@@ -723,7 +723,7 @@ Additional notes and considerations.
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.goToHeader", async (header: string) => {
+    vscode.commands.registerCommand("prd-assistant.goToHeader", async (header: string) => {
       if (typeof header === "string") {
         let headerText: string;
         let headerLevel: number;
@@ -784,7 +784,7 @@ Additional notes and considerations.
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.openDocument", async (documentNode: any) => {
+    vscode.commands.registerCommand("prd-assistant.openDocument", async (documentNode: any) => {
       if (documentNode && documentNode.uri) {
         const doc = await vscode.workspace.openTextDocument(documentNode.uri);
         await vscode.window.showTextDocument(doc);
@@ -793,7 +793,7 @@ Additional notes and considerations.
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.goToTask", async (item: any) => {
+    vscode.commands.registerCommand("prd-assistant.goToTask", async (item: any) => {
       let taskId: string | undefined;
 
       // Handle both direct task ID and tree item
@@ -832,7 +832,7 @@ Additional notes and considerations.
 
   // Add command to toggle collapse/expand tree view
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.toggleCollapseExpand", async () => {
+    vscode.commands.registerCommand("prd-assistant.toggleCollapseExpand", async () => {
       // Wait for tree view to be ready
       if (!treeViewReady) {
         await new Promise((resolve) => setTimeout(resolve, 500));
@@ -869,7 +869,7 @@ Additional notes and considerations.
 
   // Add command to fix duplicates manually
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.fixDuplicates", async () => {
+    vscode.commands.registerCommand("prd-assistant.fixDuplicates", async () => {
       const editor = vscode.window.activeTextEditor;
       if (editor && editor.document.languageId === "markdown") {
         await taskManager.fixDuplicates(editor);
@@ -880,7 +880,7 @@ Additional notes and considerations.
 
   // Add command to normalize checkboxes
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.normalizeCheckboxes", async () => {
+    vscode.commands.registerCommand("prd-assistant.normalizeCheckboxes", async () => {
       const editor = vscode.window.activeTextEditor;
       if (editor && editor.document.languageId === "markdown") {
         const edits = await taskManager.normalizeCheckboxes(editor.document);
@@ -900,7 +900,7 @@ Additional notes and considerations.
   let codeLensEnabled = true;
 
   const updateCodeLensState = () => {
-    vscode.commands.executeCommand("setContext", "prdManager.codeLensEnabled", codeLensEnabled);
+    vscode.commands.executeCommand("setContext", "prdAssistant.codeLensEnabled", codeLensEnabled);
     // Update provider state and refresh
     codeLensProvider.setSessionEnabled(codeLensEnabled);
     codeLensProvider.refresh();
@@ -912,14 +912,14 @@ Additional notes and considerations.
 
   // Add commands to toggle CodeLens (both on and off states)
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.toggleCodeLens", async () => {
+    vscode.commands.registerCommand("prd-assistant.toggleCodeLens", async () => {
       codeLensEnabled = !codeLensEnabled;
       updateCodeLensState();
     })
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.toggleCodeLensOff", async () => {
+    vscode.commands.registerCommand("prd-assistant.toggleCodeLensOff", async () => {
       codeLensEnabled = !codeLensEnabled;
       updateCodeLensState();
     })
@@ -927,7 +927,7 @@ Additional notes and considerations.
 
   // Register list item conversion commands
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.convertListItem", async (documentUri: vscode.Uri, lineNumber: number) => {
+    vscode.commands.registerCommand("prd-assistant.convertListItem", async (documentUri: vscode.Uri, lineNumber: number) => {
       const document = await vscode.workspace.openTextDocument(documentUri);
       const editor = await vscode.window.showTextDocument(document);
 
@@ -957,7 +957,7 @@ Additional notes and considerations.
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.convertSectionListItems", async (documentUri: vscode.Uri, headerLine: number) => {
+    vscode.commands.registerCommand("prd-assistant.convertSectionListItems", async (documentUri: vscode.Uri, headerLine: number) => {
       const document = await vscode.workspace.openTextDocument(documentUri);
       const editor = await vscode.window.showTextDocument(document);
       const lines = document.getText().split("\n");
@@ -1034,7 +1034,7 @@ Additional notes and considerations.
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.convertAllListItems", async (documentUri: vscode.Uri) => {
+    vscode.commands.registerCommand("prd-assistant.convertAllListItems", async (documentUri: vscode.Uri) => {
       const document = await vscode.workspace.openTextDocument(documentUri);
       const editor = await vscode.window.showTextDocument(document);
       const lines = document.getText().split("\n");
@@ -1109,7 +1109,7 @@ Additional notes and considerations.
 
   // Register deconvert task command
   context.subscriptions.push(
-    vscode.commands.registerCommand("prd-manager.deconvertTask", async (taskId: string) => {
+    vscode.commands.registerCommand("prd-assistant.deconvertTask", async (taskId: string) => {
       if (!taskId) {
         vscode.window.showErrorMessage("No task ID provided");
         return;
@@ -1207,7 +1207,7 @@ Additional notes and considerations.
 
                 const diagnostic = new vscode.Diagnostic(range, `Duplicate task ID: ${taskId}. Use 'Fix Duplicates' command to auto-increment.`, vscode.DiagnosticSeverity.Warning);
                 diagnostic.code = "duplicate-task-id";
-                diagnostic.source = "PRD Manager";
+                diagnostic.source = "PRD Assistant";
                 diagnostics.push(diagnostic);
               }
             }
@@ -1265,7 +1265,7 @@ Additional notes and considerations.
   // Refresh tree view when configuration changes (for filters)
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((event) => {
-      if (event.affectsConfiguration("prdManager.taskFilter")) {
+      if (event.affectsConfiguration("prdAssistant.taskFilter")) {
         treeProvider.refresh();
       }
     })

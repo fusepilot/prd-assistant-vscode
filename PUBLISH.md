@@ -1,6 +1,6 @@
-# Publishing PRD Manager to VS Code Marketplace
+# Publishing PRD Assistant to VS Code Marketplace
 
-This guide provides step-by-step instructions for publishing the PRD Manager extension to the Visual Studio Code Marketplace.
+This guide provides step-by-step instructions for publishing the PRD Assistant extension to the Visual Studio Code Marketplace.
 
 > **Note**: Yes, you do need an Azure DevOps account to publish to the VS Code Marketplace. This is because Microsoft uses Azure DevOps infrastructure for managing the VS Code extension marketplace (this is for VS Code extensions, not Visual Studio IDE extensions).
 

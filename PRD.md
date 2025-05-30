@@ -1,4 +1,4 @@
-# PRD Manager VSCode Extension - Product Requirements Document
+# PRD Assistant VSCode Extension - Product Requirements Document
 
 **Version:** 1.0.0  
 **Last Updated:** May 27, 2025  
@@ -6,7 +6,7 @@
 
 ## Executive Summary
 
-The PRD Manager is a VSCode extension that enhances Product Requirements Documents (PRD.md files) with interactive task management, progress tracking, and AI assistant integration through the Model Context Protocol (MCP). This extension addresses the need for better collaboration between human developers and AI Copilots while maintaining PRD documents as the single source of truth for product development.
+The PRD Assistant is a VSCode extension that enhances Product Requirements Documents (PRD.md files) with interactive task management, progress tracking, and enhanced editing capabilities. This extension addresses the need for better project management and task tracking while maintaining PRD documents as the single source of truth for product development.
 
 ## Problem Statement
 

@@ -1,19 +1,19 @@
 {
-  "name": "prd-manager",
-  "displayName": "PRD Manager",
+  "name": "prd-assistant",
+  "displayName": "PRD Assistant",
   "description": "Transform your Product Requirements Documents into interactive, trackable project dashboards.",
   "version": "1.0.0",
   "publisher": "fusepilot",
   "author": "Michael Delaney",
   "icon": "images/icon.png",
   "license": "MIT",
-  "homepage": "https://github.com/fusepilot/prd-manager-vscode#readme",
+  "homepage": "https://github.com/fusepilot/prd-assistant-vscode#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/fusepilot/prd-manager-vscode"
+    "url": "https://github.com/fusepilot/prd-assistant-vscode"
   },
   "bugs": {
-    "url": "https://github.com/fusepilot/prd-manager-vscode/issues"
+    "url": "https://github.com/fusepilot/prd-assistant-vscode/issues"
   },
   "keywords": [
     "prd",
@@ -46,153 +46,153 @@
   "contributes": {
     "commands": [
       {
-        "command": "prd-manager.addTask",
+        "command": "prd-assistant.addTask",
         "title": "PRD: Add New Task"
       },
       {
-        "command": "prd-manager.generateReport",
+        "command": "prd-assistant.generateReport",
         "title": "PRD: Generate Progress Report",
         "icon": "$(file-text)"
       },
       {
-        "command": "prd-manager.exportReportCsv",
+        "command": "prd-assistant.exportReportCsv",
         "title": "PRD: Export Progress Report (CSV)",
         "icon": "$(export)"
       },
       {
-        "command": "prd-manager.exportReportJson",
+        "command": "prd-assistant.exportReportJson",
         "title": "PRD: Export Progress Report (JSON)",
         "icon": "$(export)"
       },
       {
-        "command": "prd-manager.copyTaskList",
+        "command": "prd-assistant.copyTaskList",
         "title": "PRD: Copy Task List"
       },
       {
-        "command": "prd-manager.openPrdFile",
+        "command": "prd-assistant.openPrdFile",
         "title": "PRD: Open PRD File",
         "icon": "$(file)"
       },
       {
-        "command": "prd-manager.createPrdFile",
+        "command": "prd-assistant.createPrdFile",
         "title": "PRD: Create Empty PRD File",
         "icon": "$(new-file)"
       },
       {
-        "command": "prd-manager.copyHeaderTasks",
+        "command": "prd-assistant.copyHeaderTasks",
         "title": "PRD: Copy All Task IDs"
       },
       {
-        "command": "prd-manager.copyHeaderTasksContext",
+        "command": "prd-assistant.copyHeaderTasksContext",
         "title": "Copy All Task IDs"
       },
       {
-        "command": "prd-manager.fixDuplicates",
+        "command": "prd-assistant.fixDuplicates",
         "title": "PRD: Fix Duplicate Task IDs"
       },
       {
-        "command": "prd-manager.normalizeCheckboxes",
+        "command": "prd-assistant.normalizeCheckboxes",
         "title": "PRD: Normalize Checkbox Formatting"
       },
       {
-        "command": "prd-manager.toggleCodeLens",
+        "command": "prd-assistant.toggleCodeLens",
         "title": "Toggle PRD CodeLens",
         "icon": "$(eye)"
       },
       {
-        "command": "prd-manager.toggleCodeLensOff",
+        "command": "prd-assistant.toggleCodeLensOff",
         "title": "Toggle PRD CodeLens",
         "icon": "$(eye-closed)"
       },
       {
-        "command": "prd-manager.toggleTask",
+        "command": "prd-assistant.toggleTask",
         "title": "Toggle Task"
       },
       {
-        "command": "prd-manager.addTaskAtCursor",
+        "command": "prd-assistant.addTaskAtCursor",
         "title": "Add Task Here"
       },
       {
-        "command": "prd-manager.addTaskToHeader",
+        "command": "prd-assistant.addTaskToHeader",
         "title": "Add Task"
       },
       {
-        "command": "prd-manager.addTaskToTask",
+        "command": "prd-assistant.addTaskToTask",
         "title": "Add Subtask"
       },
       {
-        "command": "prd-manager.toggleCollapseExpand",
+        "command": "prd-assistant.toggleCollapseExpand",
         "title": "Toggle Collapse/Expand",
         "icon": "$(collapse-all)"
       },
       {
-        "command": "prd-manager.assignTask",
+        "command": "prd-assistant.assignTask",
         "title": "Assign Task"
       },
       {
-        "command": "prd-manager.copyDeepLink",
+        "command": "prd-assistant.copyDeepLink",
         "title": "Copy Deep Link"
       },
       {
-        "command": "prd-manager.refreshTasks",
+        "command": "prd-assistant.refreshTasks",
         "title": "Refresh Tasks",
         "icon": "$(refresh)"
       },
       {
-        "command": "prd-manager.goToTask",
+        "command": "prd-assistant.goToTask",
         "title": "Go to Task",
         "icon": "$(go-to-file)"
       },
       {
-        "command": "prd-manager.copyTaskId",
+        "command": "prd-assistant.copyTaskId",
         "title": "Copy Task ID"
       },
       {
-        "command": "prd-manager.copyTaskText",
+        "command": "prd-assistant.copyTaskText",
         "title": "Copy Task Text"
       },
       {
-        "command": "prd-manager.filterAllTasks",
+        "command": "prd-assistant.filterAllTasks",
         "title": "Show All Tasks",
         "icon": "$(list-flat)"
       },
       {
-        "command": "prd-manager.filterCompletedTasks",
+        "command": "prd-assistant.filterCompletedTasks",
         "title": "Show Completed Tasks",
         "icon": "$(pass)"
       },
       {
-        "command": "prd-manager.filterUncompletedTasks",
+        "command": "prd-assistant.filterUncompletedTasks",
         "title": "Show Uncompleted Tasks",
         "icon": "$(circle-large-outline)"
       },
       {
-        "command": "prd-manager.goToHeader",
+        "command": "prd-assistant.goToHeader",
         "title": "Go to Header"
       },
       {
-        "command": "prd-manager.openDocument",
+        "command": "prd-assistant.openDocument",
         "title": "Open Document",
         "icon": "$(go-to-file)"
       },
       {
-        "command": "prd-manager.debugScan",
+        "command": "prd-assistant.debugScan",
         "title": "PRD: Debug Scan Workspace"
       },
       {
-        "command": "prd-manager.convertListItem",
+        "command": "prd-assistant.convertListItem",
         "title": "Convert to Task"
       },
       {
-        "command": "prd-manager.convertSectionListItems",
+        "command": "prd-assistant.convertSectionListItems",
         "title": "Convert Section List Items to Tasks"
       },
       {
-        "command": "prd-manager.convertAllListItems",
+        "command": "prd-assistant.convertAllListItems",
         "title": "Convert All List Items to Tasks"
       },
       {
-        "command": "prd-manager.deconvertTask",
+        "command": "prd-assistant.deconvertTask",
         "title": "Deconvert"
       }
     ],
@@ -202,260 +202,260 @@
           "id": "prdExplorer",
           "name": "PRD Tasks",
           "icon": "$(checklist)",
-          "contextualTitle": "PRD Manager"
+          "contextualTitle": "PRD Assistant"
         }
       ]
     },
     "viewsWelcome": [
       {
         "view": "prdExplorer",
-        "contents": "No PRD files found in workspace.\n[Create Empty PRD File](command:prd-manager.createPrdFile)\n[Open Existing PRD File](command:prd-manager.openPrdFile)"
+        "contents": "No PRD files found in workspace.\n[Create Empty PRD File](command:prd-assistant.createPrdFile)\n[Open Existing PRD File](command:prd-assistant.openPrdFile)"
       }
     ],
     "menus": {
       "commandPalette": [
         {
-          "command": "prd-manager.toggleTask",
+          "command": "prd-assistant.toggleTask",
           "when": "false"
         },
         {
-          "command": "prd-manager.addTaskAtCursor",
+          "command": "prd-assistant.addTaskAtCursor",
           "when": "false"
         },
         {
-          "command": "prd-manager.addTaskToHeader",
+          "command": "prd-assistant.addTaskToHeader",
           "when": "false"
         },
         {
-          "command": "prd-manager.assignTask",
+          "command": "prd-assistant.assignTask",
           "when": "false"
         },
         {
-          "command": "prd-manager.copyDeepLink",
+          "command": "prd-assistant.copyDeepLink",
           "when": "false"
         },
         {
-          "command": "prd-manager.refreshTasks",
+          "command": "prd-assistant.refreshTasks",
           "when": "false"
         },
         {
-          "command": "prd-manager.goToTask",
+          "command": "prd-assistant.goToTask",
           "when": "false"
         },
         {
-          "command": "prd-manager.copyTaskId",
+          "command": "prd-assistant.copyTaskId",
           "when": "false"
         },
         {
-          "command": "prd-manager.copyTaskText",
+          "command": "prd-assistant.copyTaskText",
           "when": "false"
         },
         {
-          "command": "prd-manager.filterAllTasks",
+          "command": "prd-assistant.filterAllTasks",
           "when": "false"
         },
         {
-          "command": "prd-manager.filterCompletedTasks",
+          "command": "prd-assistant.filterCompletedTasks",
           "when": "false"
         },
         {
-          "command": "prd-manager.filterUncompletedTasks",
+          "command": "prd-assistant.filterUncompletedTasks",
           "when": "false"
         },
         {
-          "command": "prd-manager.goToHeader",
+          "command": "prd-assistant.goToHeader",
           "when": "false"
         },
         {
-          "command": "prd-manager.copyHeaderTasksContext",
+          "command": "prd-assistant.copyHeaderTasksContext",
           "when": "false"
         },
         {
-          "command": "prd-manager.addTaskToTask",
+          "command": "prd-assistant.addTaskToTask",
           "when": "false"
         },
         {
-          "command": "prd-manager.toggleCollapseExpand",
+          "command": "prd-assistant.toggleCollapseExpand",
           "when": "false"
         },
         {
-          "command": "prd-manager.toggleCodeLens",
+          "command": "prd-assistant.toggleCodeLens",
           "when": "false"
         },
         {
-          "command": "prd-manager.toggleCodeLensOff",
+          "command": "prd-assistant.toggleCodeLensOff",
           "when": "false"
         },
         {
-          "command": "prd-manager.convertListItem",
+          "command": "prd-assistant.convertListItem",
           "when": "false"
         },
         {
-          "command": "prd-manager.convertSectionListItems",
+          "command": "prd-assistant.convertSectionListItems",
           "when": "false"
         },
         {
-          "command": "prd-manager.convertAllListItems",
+          "command": "prd-assistant.convertAllListItems",
           "when": "false"
         },
         {
-          "command": "prd-manager.deconvertTask",
+          "command": "prd-assistant.deconvertTask",
           "when": "false"
         }
       ],
       "view/title": [
         {
-          "command": "prd-manager.createPrdFile",
+          "command": "prd-assistant.createPrdFile",
           "when": "view == prdExplorer",
           "group": "navigation@1"
         },
         {
-          "command": "prd-manager.openPrdFile",
+          "command": "prd-assistant.openPrdFile",
           "when": "view == prdExplorer",
           "group": "navigation@2"
         },
         {
-          "command": "prd-manager.refreshTasks",
+          "command": "prd-assistant.refreshTasks",
           "when": "view == prdExplorer",
           "group": "navigation@3"
         },
         {
-          "command": "prd-manager.generateReport",
+          "command": "prd-assistant.generateReport",
           "when": "view == prdExplorer",
           "group": "export@1"
         },
         {
-          "command": "prd-manager.exportReportCsv",
+          "command": "prd-assistant.exportReportCsv",
           "when": "view == prdExplorer",
           "group": "export@2"
         },
         {
-          "command": "prd-manager.exportReportJson",
+          "command": "prd-assistant.exportReportJson",
           "when": "view == prdExplorer",
           "group": "export@3"
         },
         {
-          "command": "prd-manager.filterAllTasks",
+          "command": "prd-assistant.filterAllTasks",
           "when": "view == prdExplorer",
           "group": "1_filter@1"
         },
         {
-          "command": "prd-manager.filterCompletedTasks",
+          "command": "prd-assistant.filterCompletedTasks",
           "when": "view == prdExplorer",
           "group": "1_filter@2"
         },
         {
-          "command": "prd-manager.filterUncompletedTasks",
+          "command": "prd-assistant.filterUncompletedTasks",
           "when": "view == prdExplorer",
           "group": "1_filter@3"
         },
         {
-          "command": "prd-manager.toggleCollapseExpand",
+          "command": "prd-assistant.toggleCollapseExpand",
           "when": "view == prdExplorer",
           "group": "navigation@4"
         }
       ],
       "view/item/context": [
         {
-          "command": "prd-manager.goToTask",
+          "command": "prd-assistant.goToTask",
           "when": "view == prdExplorer && viewItem == prdTask",
           "group": "navigation@1"
         },
         {
-          "command": "prd-manager.toggleTask",
+          "command": "prd-assistant.toggleTask",
           "when": "view == prdExplorer && viewItem == prdTask",
           "group": "1_modification@1"
         },
         {
-          "command": "prd-manager.assignTask",
+          "command": "prd-assistant.assignTask",
           "when": "view == prdExplorer && viewItem == prdTask",
           "group": "1_modification@2"
         },
         {
-          "command": "prd-manager.copyTaskId",
+          "command": "prd-assistant.copyTaskId",
           "when": "view == prdExplorer && viewItem == prdTask",
           "group": "2_copy@1"
         },
         {
-          "command": "prd-manager.copyTaskText",
+          "command": "prd-assistant.copyTaskText",
           "when": "view == prdExplorer && viewItem == prdTask",
           "group": "2_copy@2"
         },
         {
-          "command": "prd-manager.copyDeepLink",
+          "command": "prd-assistant.copyDeepLink",
           "when": "view == prdExplorer && viewItem == prdTask",
           "group": "2_copy@3"
         },
         {
-          "command": "prd-manager.addTaskToTask",
+          "command": "prd-assistant.addTaskToTask",
           "when": "view == prdExplorer && viewItem == prdTaskWithChildren",
           "group": "1_modification@3"
         },
         {
-          "command": "prd-manager.addTaskToHeader",
+          "command": "prd-assistant.addTaskToHeader",
           "when": "view == prdExplorer && viewItem == prdHeader",
           "group": "1_modification@1"
         },
         {
-          "command": "prd-manager.copyHeaderTasksContext",
+          "command": "prd-assistant.copyHeaderTasksContext",
           "when": "view == prdExplorer && viewItem == prdHeader",
           "group": "2_copy@1"
         },
         {
-          "command": "prd-manager.goToHeader",
+          "command": "prd-assistant.goToHeader",
           "when": "view == prdExplorer && viewItem == prdHeader",
           "group": "navigation@1"
         },
         {
-          "command": "prd-manager.openDocument",
+          "command": "prd-assistant.openDocument",
           "when": "view == prdExplorer && viewItem == prdDocument",
           "group": "navigation@1"
         }
       ],
       "editor/context": [
         {
-          "command": "prd-manager.toggleTask",
+          "command": "prd-assistant.toggleTask",
           "when": "resourceExtname == .md",
           "group": "prd"
         },
         {
-          "command": "prd-manager.assignTask",
+          "command": "prd-assistant.assignTask",
           "when": "resourceExtname == .md",
           "group": "prd"
         },
         {
-          "command": "prd-manager.copyDeepLink",
+          "command": "prd-assistant.copyDeepLink",
           "when": "resourceExtname == .md",
           "group": "prd"
         },
         {
-          "command": "prd-manager.addTaskAtCursor",
+          "command": "prd-assistant.addTaskAtCursor",
           "when": "resourceExtname == .md",
           "group": "prd"
         }
       ],
       "editor/title": [
         {
-          "command": "prd-manager.toggleCodeLens",
-          "when": "resourceExtname == .md && prdManager.codeLensEnabled && prdManager.isPrdFile",
+          "command": "prd-assistant.toggleCodeLens",
+          "when": "resourceExtname == .md && prdAssistant.codeLensEnabled && prdAssistant.isPrdFile",
           "group": "navigation"
         },
         {
-          "command": "prd-manager.toggleCodeLensOff",
-          "when": "resourceExtname == .md && !prdManager.codeLensEnabled && prdManager.isPrdFile",
+          "command": "prd-assistant.toggleCodeLensOff",
+          "when": "resourceExtname == .md && !prdAssistant.codeLensEnabled && prdAssistant.isPrdFile",
           "group": "navigation"
         }
       ]
     },
     "configuration": {
-      "title": "PRD Manager",
+      "title": "PRD Assistant",
       "properties": {
-        "prdManager.autoGenerateIds": {
+        "prdAssistant.autoGenerateIds": {
           "type": "boolean",
           "default": true,
           "description": "Automatically generate task IDs"
         },
-        "prdManager.idFormat": {
+        "prdAssistant.idFormat": {
           "type": "string",
           "default": "sequential",
           "enum": [
@@ -469,22 +469,22 @@
           "description": "ID generation strategy for new tasks",
           "markdownDescription": "Choose how task IDs are generated:\n- **Sequential**: Creates IDs like `PRD-100001`, `PRD-100002`, etc. Automatically increments from the highest existing ID.\n- **Timestamp**: Creates IDs based on current timestamp for guaranteed uniqueness.\n\nThe prefix can be customized using the `taskIdPrefix` setting."
         },
-        "prdManager.showCodeLens": {
+        "prdAssistant.showCodeLens": {
           "type": "boolean",
           "default": true,
           "description": "Show inline task actions"
         },
-        "prdManager.decorateAssignees": {
+        "prdAssistant.decorateAssignees": {
           "type": "boolean",
           "default": true,
           "description": "Highlight @-mentions"
         },
-        "prdManager.decorateDeepLinks": {
+        "prdAssistant.decorateDeepLinks": {
           "type": "boolean",
           "default": true,
           "description": "Make task IDs clickable"
         },
-        "prdManager.taskFilter": {
+        "prdAssistant.taskFilter": {
           "type": "string",
           "enum": [
             "all",
@@ -494,12 +494,12 @@
           "default": "all",
           "description": "Filter tasks in the explorer"
         },
-        "prdManager.normalizeCheckboxes": {
+        "prdAssistant.normalizeCheckboxes": {
           "type": "boolean",
           "default": true,
           "description": "Normalize checkbox formatting ([] -> [ ], [x ] -> [x]) when formatting"
         },
-        "prdManager.filePatterns": {
+        "prdAssistant.filePatterns": {
           "type": "array",
           "default": [
             "*prd*.md",
@@ -509,62 +509,62 @@
           "description": "File name patterns to identify PRD files (case-insensitive)",
           "markdownDescription": "Glob patterns to identify PRD files. Default patterns match files containing 'PRD' or 'prd' in the filename."
         },
-        "prdManager.additionalFiles": {
+        "prdAssistant.additionalFiles": {
           "type": "array",
           "default": [],
-          "description": "Additional specific files to enhance with PRD Manager features",
-          "markdownDescription": "List of specific file paths to enhance with PRD Manager features. For example: `[\"CLAUDE.md\", \"TODO.md\", \"TASKS.md\"]`. These files will have all PRD Manager features enabled regardless of their naming pattern.",
+          "description": "Additional specific files to enhance with PRD Assistant features",
+          "markdownDescription": "List of specific file paths to enhance with PRD Assistant features. For example: `[\"CLAUDE.md\", \"TODO.md\", \"TASKS.md\"]`. These files will have all PRD Assistant features enabled regardless of their naming pattern.",
           "items": {
             "type": "string"
           }
         },
-        "prdManager.enableCodeLensForHeaders": {
+        "prdAssistant.enableCodeLensForHeaders": {
           "type": "boolean",
           "default": true,
           "description": "Show completion stats and 'Add Task' buttons on headers"
         },
-        "prdManager.enableCodeLensForTasks": {
+        "prdAssistant.enableCodeLensForTasks": {
           "type": "boolean",
           "default": true,
           "description": "Show action buttons (Toggle, Assign, Copy) on tasks"
         },
-        "prdManager.enableConversionCodeLens": {
+        "prdAssistant.enableConversionCodeLens": {
           "type": "boolean",
           "default": true,
           "description": "Show 'Convert to Task' buttons on list items"
         },
-        "prdManager.showProgressInTreeView": {
+        "prdAssistant.showProgressInTreeView": {
           "type": "boolean",
           "default": true,
           "description": "Display completion percentage in the PRD Tasks explorer"
         },
-        "prdManager.autoProcessDocuments": {
+        "prdAssistant.autoProcessDocuments": {
           "type": "boolean",
           "default": true,
           "description": "Automatically process PRD documents when opened or changed"
         },
-        "prdManager.showDuplicateWarnings": {
+        "prdAssistant.showDuplicateWarnings": {
           "type": "boolean",
           "default": true,
           "description": "Show warnings for duplicate task IDs"
         },
-        "prdManager.enableQuickFixes": {
+        "prdAssistant.enableQuickFixes": {
           "type": "boolean",
           "default": true,
           "description": "Enable quick fixes for duplicate task IDs"
         },
-        "prdManager.defaultAssignee": {
+        "prdAssistant.defaultAssignee": {
           "type": "string",
           "default": "",
           "description": "Default assignee for new tasks (e.g., @username)"
         },
-        "prdManager.taskIdPrefix": {
+        "prdAssistant.taskIdPrefix": {
           "type": "string",
           "default": "PRD",
           "description": "Prefix for generated task IDs",
           "markdownDescription": "The prefix to use for all generated task IDs. For example:\n- `PRD` → PRD-100001\n- `TASK` → TASK-100001\n- `PROJ` → PROJ-100001"
         },
-        "prdManager.enableDecorations": {
+        "prdAssistant.enableDecorations": {
           "type": "boolean",
           "default": true,
           "description": "Enable visual decorations for tasks and assignees"
