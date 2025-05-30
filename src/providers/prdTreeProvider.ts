@@ -151,18 +151,30 @@ export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string
       console.log(`TreeProvider: Found ${documents.length} documents:`, documents.map(d => path.basename(d.fsPath)));
       
       if (documents.length > 1) {
-        // Multiple files: return document nodes
-        const documentNodes = documents.map(uri => ({
-          type: 'document' as const,
-          uri,
-          filename: path.basename(uri.fsPath)
-        }));
+        // Multiple files: return document nodes, but only for documents that have tasks
+        const documentNodes = documents
+          .filter(uri => {
+            const tasks = this.taskManager.getTasksByDocument(uri);
+            return tasks.length > 0;
+          })
+          .map(uri => ({
+            type: 'document' as const,
+            uri,
+            filename: path.basename(uri.fsPath)
+          }));
         console.log('TreeProvider: Returning document nodes for multi-file mode');
         return Promise.resolve(documentNodes);
       } else if (documents.length === 1) {
-        // Single file: return headers/tasks directly
-        console.log('TreeProvider: Single file mode, returning elements for:', path.basename(documents[0].fsPath));
-        return Promise.resolve(this.getRootElementsForDocument(documents[0]));
+        // Single file: return headers/tasks directly, but only if it has tasks
+        const singleDoc = documents[0];
+        const tasks = this.taskManager.getTasksByDocument(singleDoc);
+        if (tasks.length > 0) {
+          console.log('TreeProvider: Single file mode, returning elements for:', path.basename(singleDoc.fsPath));
+          return Promise.resolve(this.getRootElementsForDocument(singleDoc));
+        } else {
+          console.log('TreeProvider: Single file has no tasks, returning empty');
+          return Promise.resolve([]);
+        }
       } else {
         // No documents
         console.log('TreeProvider: No documents found');
