@@ -270,10 +270,10 @@ When making updates:
 
 ### Getting Help
 
-- [VS Code Extension API Documentation](https://code.visualstudio.com/api)
-- [Publishing Extensions Guide](https://code.visualstudio.com/api/working-with-extensions/publishing-extension)
-- [vsce Documentation](https://github.com/microsoft/vscode-vsce)
-- [VS Code Extension Samples](https://github.com/microsoft/vscode-extension-samples)
+- [VS Code Extension API Documentation] (https://code.visualstudio.com/api)
+- [Publishing Extensions Guide] (https://code.visualstudio.com/api/working-with-extensions/publishing-extension)
+- [vsce Documentation] (https://github.com/microsoft/vscode-vsce)
+- [VS Code Extension Samples] (https://github.com/microsoft/vscode-extension-samples)
 
 ## Alternative: Open VSX Registry
 
