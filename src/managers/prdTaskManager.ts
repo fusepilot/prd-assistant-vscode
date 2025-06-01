@@ -83,11 +83,11 @@ export class PrdTaskManager {
 
         // Handle multiple or misplaced PRD IDs in the rest of the line
         let cleanedRestOfLine = restOfLine.trim();
-        const prdIds = cleanedRestOfLine.match(/PRD-\d{6}/g);
+        const prdIds = cleanedRestOfLine.match(/PRD-\d+/g);
 
         if (prdIds && prdIds.length > 0) {
           // Remove all PRD IDs from the text
-          cleanedRestOfLine = cleanedRestOfLine.replace(/PRD-\d{6}/g, "").trim();
+          cleanedRestOfLine = cleanedRestOfLine.replace(/PRD-\d+/g, "").trim();
           // Remove extra spaces that might be left behind
           // Only normalize consecutive spaces between words, not within words
           // This prevents breaking words that might have accidental spaces while typing
@@ -119,12 +119,17 @@ export class PrdTaskManager {
       }
 
       // Try to match different task formats:
-      // 1. "task text @assignee PRD-ID" (most common in sample-PRD.md)
-      let match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)\s+@([\w-]+(?:-copilot)?)\s+(PRD-\d{6})$/);
+      // 1. "task text @assignee(s) PRD-ID" (most common in sample-PRD.md)
+      let match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)\s+(@[\w-]+(?:-copilot)?(?:\s+@[\w-]+(?:-copilot)?)*)\s+(PRD-\d+)$/);
       
       if (!match) {
-        // 2. "task text PRD-ID @assignee" or "task text PRD-ID" (no assignee)
-        match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)\s+(PRD-\d{6})(?:\s+@([\w-]+(?:-copilot)?))?$/);
+        // 2. "task text PRD-ID @assignee(s)" or "task text PRD-ID" (no assignee)
+        match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)\s+(PRD-\d+)(?:\s+(@[\w-]+(?:-copilot)?(?:\s+@[\w-]+(?:-copilot)?)*))?$/);
+      }
+      
+      if (!match) {
+        // 3. "PRD-ID task text @assignee(s)" (ID first)
+        match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(PRD-\d+)\s+(.*?)(?:\s+(@[\w-]+(?:-copilot)?(?:\s+@[\w-]+(?:-copilot)?)*))?$/);
       }
 
       if (match) {
@@ -135,13 +140,19 @@ export class PrdTaskManager {
         let bullet: string;
         let checked: string;
         
-        // Check which pattern matched by counting groups
-        if (match.length === 7 && match[5] && match[6] && !match[6].startsWith('PRD-')) {
-          // Format: "task text @assignee PRD-ID" (6 groups + full match = 7)
+        // Check which pattern matched by analyzing the groups
+        if (match.length === 7 && match[5] && match[6] && match[6].startsWith('PRD-')) {
+          // Format 1: "task text @assignee(s) PRD-ID" (6 groups + full match = 7)
           [, indent, bullet, checked, textContent, assignee, existingId] = match;
+          // assignee already has @ prefix from regex and may include multiple assignees
+        } else if (match.length === 7 && match[4] && match[4].startsWith('PRD-')) {
+          // Format 3: "PRD-ID task text @assignee(s)" (6 groups + full match = 7)
+          [, indent, bullet, checked, existingId, textContent, assignee] = match;
+          // assignee already has @ prefix from regex and may include multiple assignees
         } else {
-          // Format: "task text PRD-ID @assignee" or "task text PRD-ID" (no assignee)
+          // Format 2: "task text PRD-ID @assignee(s)" or "task text PRD-ID" (no assignee)
           [, indent, bullet, checked, textContent, existingId, assignee] = match;
+          // assignee already has @ prefix from regex and may include multiple assignees
         }
         let taskId = existingId;
         let text = textContent;
@@ -152,7 +163,7 @@ export class PrdTaskManager {
           continue;
         } else if (!taskId && this.getConfig("autoGenerateIds")) {
           // Check if there's already an ID in the text (e.g., no space before ID)
-          const idInText = text.match(/(.*?)(PRD-\d{6})$/);
+          const idInText = text.match(/(.*?)(PRD-\d+)$/);
           if (idInText) {
             // ID exists in text, extract it
             taskId = idInText[2];
@@ -259,7 +270,7 @@ export class PrdTaskManager {
     }
 
     const line = lines[task.line];
-    const match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(PRD-\d{6})?$/);
+    const match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+(@[\w-]+(?:-copilot)?(?:\s+@[\w-]+(?:-copilot)?)*))?(?:\s+(PRD-\d+))?$/);
 
     if (match) {
       const [, indent, bullet, checked, taskText, assignee, foundTaskId] = match;
@@ -296,7 +307,7 @@ export class PrdTaskManager {
 
   async toggleTaskAtPosition(document: vscode.TextDocument, position: vscode.Position): Promise<void> {
     const line = document.lineAt(position.line);
-    const match = line.text.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(PRD-\d{6})?$/);
+    const match = line.text.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+(@[\w-]+(?:-copilot)?(?:\s+@[\w-]+(?:-copilot)?)*))?(?:\s+(PRD-\d+))?$/);
 
     if (match) {
       const [, indent, bullet, checked, text, assignee, taskId] = match;
@@ -553,11 +564,11 @@ export class PrdTaskManager {
 
     let line = lines[task.line];
 
-    // Remove existing assignee if present
-    line = line.replace(/@[\w-]+(?:-copilot)?/, "").trim();
+    // Remove existing assignees if present
+    line = line.replace(/@[\w-]+(?:-copilot)?(?:\s+@[\w-]+(?:-copilot)?)*/g, "").trim();
 
     // Add new assignee before the task ID
-    line = line.replace(/(\s*PRD-\d{6})$/, ` ${assignee}$1`);
+    line = line.replace(/(\s*PRD-\d+)$/, ` ${assignee}$1`);
 
     lines[task.line] = line;
 
@@ -581,7 +592,7 @@ export class PrdTaskManager {
 
   getTaskIdAtPosition(document: vscode.TextDocument, position: vscode.Position): string | undefined {
     const line = document.lineAt(position.line);
-    const match = line.text.match(/(PRD-\d{6})/);
+    const match = line.text.match(/(PRD-\d+)/);
     return match ? match[1] : undefined;
   }
 
@@ -762,7 +773,7 @@ export class PrdTaskManager {
     });
 
     for (const line of lines) {
-      const match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(PRD-\d{6})?$/);
+      const match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+(@[\w-]+(?:-copilot)?(?:\s+@[\w-]+(?:-copilot)?)*))?(?:\s+(PRD-\d+))?$/);
 
       if (match) {
         const [, , , , , , taskId] = match;
@@ -795,7 +806,7 @@ export class PrdTaskManager {
     // Find all duplicates
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      const match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(PRD-\d{6})?$/);
+      const match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+(@[\w-]+(?:-copilot)?(?:\s+@[\w-]+(?:-copilot)?)*))?(?:\s+(PRD-\d+))?$/);
 
       if (match) {
         const [, indent, bullet, checked, text, assignee, taskId] = match;
@@ -803,7 +814,7 @@ export class PrdTaskManager {
         if (taskId && (seenIds.has(taskId) || existingIdsFromOtherDocs.has(taskId))) {
           // Found a duplicate
           const newTaskId = this.generateNextSequentialId(taskId, seenIds, existingIdsFromOtherDocs);
-          const newLine = `${indent}${bullet} [${checked}] ${text}${assignee ? ` @${assignee}` : ""} ${newTaskId}`;
+          const newLine = `${indent}${bullet} [${checked}] ${text}${assignee ? ` ${assignee}` : ""} ${newTaskId}`;
 
           duplicates.push({
             line: i,
@@ -878,15 +889,20 @@ export class PrdTaskManager {
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      const match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(PRD-\d{6})?$/);
-
-      if (match) {
-        const taskId = match[6];
-        if (taskId) {
-          if (!seenIds.has(taskId)) {
-            seenIds.set(taskId, []);
-          }
-          seenIds.get(taskId)!.push(i);
+      // Check if this is a task line
+      const taskMatch = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]/);
+      
+      if (taskMatch) {
+        // Extract all PRD-IDs from the line
+        const prdIds = line.match(/PRD-\d+/g);
+        if (prdIds) {
+          // For each PRD-ID found, track its line number
+          prdIds.forEach(taskId => {
+            if (!seenIds.has(taskId)) {
+              seenIds.set(taskId, []);
+            }
+            seenIds.get(taskId)!.push(i);
+          });
         }
       }
     }
@@ -918,7 +934,7 @@ export class PrdTaskManager {
     // Find all duplicates
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      const match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+@([\w-]+(?:-copilot)?))?\s*(PRD-\d{6})?$/);
+      const match = line.match(/^(\s*)(-|\*|\d+\.)\s+\[([ x])\]\s+(.*?)(?:\s+(@[\w-]+(?:-copilot)?(?:\s+@[\w-]+(?:-copilot)?)*))?(?:\s+(PRD-\d+))?$/);
 
       if (match) {
         const [, indent, bullet, checked, text, assignee, taskId] = match;
@@ -926,7 +942,7 @@ export class PrdTaskManager {
         if (taskId && (seenIds.has(taskId) || existingIdsFromOtherDocs.has(taskId))) {
           // Found a duplicate
           const newTaskId = this.generateNextSequentialId(taskId, seenIds, existingIdsFromOtherDocs);
-          const newLine = `${indent}${bullet} [${checked}] ${text}${assignee ? ` @${assignee}` : ""} ${newTaskId}`;
+          const newLine = `${indent}${bullet} [${checked}] ${text}${assignee ? ` ${assignee}` : ""} ${newTaskId}`;
 
           duplicates.push({
             line: i,
@@ -1071,11 +1087,11 @@ export class PrdTaskManager {
 
         // Handle multiple or misplaced PRD IDs in the rest of the line
         let cleanedRestOfLine = restOfLine.trim();
-        const prdIds = cleanedRestOfLine.match(/PRD-\d{6}/g);
+        const prdIds = cleanedRestOfLine.match(/PRD-\d+/g);
 
         if (prdIds && prdIds.length > 0) {
           // Remove all PRD IDs from the text
-          cleanedRestOfLine = cleanedRestOfLine.replace(/PRD-\d{6}/g, "").trim();
+          cleanedRestOfLine = cleanedRestOfLine.replace(/PRD-\d+/g, "").trim();
           // Remove extra spaces that might be left behind
           // Only normalize consecutive spaces between words, not within words
           // This prevents breaking words that might have accidental spaces while typing

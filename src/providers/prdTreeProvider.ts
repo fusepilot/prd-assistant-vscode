@@ -258,7 +258,7 @@ export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string
         // Show if it has "prd" in name OR has tasks
         if (filename.includes('prd') || tasks.length > 0) {
           this.log('TreeProvider: Single file mode, returning elements for: ' + path.basename(singleDoc.fsPath));
-          const elements = this.getRootElementsForDocument(singleDoc);
+          const elements = this.getRootElementsForDocument(singleDoc, false); // false = single-file mode
           this.log(`TreeProvider: getRootElementsForDocument returned ${elements.length} elements`);
           
           // If it's a PRD file with no tasks/headers, show a message instead of empty
@@ -286,7 +286,7 @@ export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string
     } else if (typeof element === "object" && "type" in element && element.type === "document") {
       // Return headers/tasks for this document
       console.log('TreeProvider: Getting children for document:', element.filename);
-      const elements = this.getRootElementsForDocument(element.uri);
+      const elements = this.getRootElementsForDocument(element.uri, true); // true = multi-file mode
       console.log(`TreeProvider: Document ${element.filename} has ${elements.length} root elements`);
       return Promise.resolve(elements);
     } else if (typeof element === "string") {
@@ -317,19 +317,18 @@ export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string
     // This method is kept for backward compatibility but now delegates to the new method
     const documents = this.taskManager.getDocuments();
     if (documents.length === 1) {
-      return this.getRootElementsForDocument(documents[0]);
+      return this.getRootElementsForDocument(documents[0], false); // false = single-file mode
     }
     return [];
   }
 
-  public getRootElementsForDocument(documentUri: vscode.Uri): (PrdTask | string)[] {
+  public getRootElementsForDocument(documentUri: vscode.Uri, isMultiFileMode: boolean = false): (PrdTask | string)[] {
     const elements: (PrdTask | string)[] = [];
     const documentTasks = this.taskManager.getTasksByDocument(documentUri);
     
     // Get current filter setting
     const filter = vscode.workspace.getConfiguration('prdAssistant').get<'all' | 'completed' | 'uncompleted'>('taskFilter', 'all');
 
-    console.log("Getting root elements for document:", documentUri.fsPath, "total tasks:", documentTasks.length, "filter:", filter);
 
     // Filter tasks first
     const filteredTasks = documentTasks.filter((task) => {
@@ -341,6 +340,7 @@ export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string
       
       return true;
     });
+
 
     // Build a map of all headers and their relationships
     const headerHierarchy = new Map<string, Set<string>>();
@@ -395,7 +395,11 @@ export class PrdTreeProvider implements vscode.TreeDataProvider<PrdTask | string
           }
         }
         
-        headerKey = `${documentUri.toString()}::${"#".repeat(selectedHeader.level)} ${selectedHeader.text}`;
+        if (isMultiFileMode) {
+          headerKey = `${documentUri.toString()}::${"#".repeat(selectedHeader.level)} ${selectedHeader.text}`;
+        } else {
+          headerKey = `${"#".repeat(selectedHeader.level)} ${selectedHeader.text}`;
+        }
         headerLine = selectedHeader.line;
       }
 

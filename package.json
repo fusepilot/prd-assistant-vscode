@@ -609,7 +609,11 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
-    "test": "vscode-test",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "test:vscode": "vscode-test",
     "package": "vsce package",
     "package:pre": "vsce package --pre-release",
     "publish": "vsce publish",
@@ -621,15 +625,18 @@
     "build:prod": "npm run clean && npm run compile && npm run package"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
     "@types/vscode": "^1.100.0",
     "@typescript-eslint/eslint-plugin": "^8.31.1",
     "@typescript-eslint/parser": "^8.31.1",
+    "@vitest/ui": "^3.1.4",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.5.2",
     "eslint": "^9.25.1",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.4"
   },
   "dependencies": {
     "@types/minimatch": "^5.1.2",
