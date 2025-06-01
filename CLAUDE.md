@@ -12,32 +12,32 @@ Do not use bash commands unless you're sure theres not a native tool for you to 
 
 ```bash
 # Install dependencies
-pnpm install
+npm install
 
 # Development mode with auto-recompilation
-pnpm run watch
+npm run watch
 
 # Type checking
-pnpm run check-types
+npm run check-types
 
 # Lint code
-pnpm run lint
+npm run lint
 
 # Full build (type-check, lint, and bundle)
-pnpm run compile
+npm run compile
 
 # Production build with minification
-pnpm run package
+npm run package
 ```
 
 ### Testing
 
 ```bash
 # Run tests (compiles and lints first)
-pnpm test
+npm test
 
 # Pre-test preparation
-pnpm run pretest
+npm run pretest
 ```
 
 ### Running the Extension

@@ -95,32 +95,32 @@ Comprehensive test utilities:
 
 ### Prerequisites
 ```bash
-pnpm install
+npm install
 ```
 
 ### Run All Tests
 ```bash
-pnpm test
+npm test
 ```
 
 ### Run Tests in Watch Mode
 ```bash
-pnpm run test:watch
+npm run test:watch
 ```
 
 ### Run Tests with UI
 ```bash
-pnpm run test:ui
+npm run test:ui
 ```
 
 ### Run Tests with Coverage
 ```bash
-pnpm run test:coverage
+npm run test:coverage
 ```
 
 ### Compile Tests Only
 ```bash
-pnpm run pretest
+npm run pretest
 ```
 
 ## Test Configuration
@@ -232,7 +232,7 @@ Performance targets:
 
 ### Debug Specific Test
 1. Set breakpoints in test files
-2. Use Vitest UI for interactive debugging: `pnpm run test:ui`
+2. Use Vitest UI for interactive debugging: `npm run test:ui`
 3. Or use VSCode's built-in test debugging with Vitest extension
 
 ### Mock Debugging

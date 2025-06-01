@@ -12,9 +12,6 @@ This guide provides step-by-step instructions for publishing the PRD Assistant e
 # Install vsce (Visual Studio Code Extension Manager)
 npm install -g @vscode/vsce
 
-# Or with pnpm
-pnpm add -g @vscode/vsce
-
 # Verify installation
 vsce --version
 ```
@@ -132,7 +129,7 @@ Reference these in your README.md.
 
 ```bash
 # Run all tests
-pnpm test
+npm test
 
 # Package locally to test
 vsce package
@@ -185,7 +182,7 @@ vsce publish -m "Fixed critical bug in task management"
 vsce publish --pre-release
 
 # Or use package.json scripts
-pnpm run publish:pre
+npm run publish:pre
 ```
 
 ## Post-Publishing
