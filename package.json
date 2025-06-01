@@ -2,7 +2,7 @@
   "name": "prd-assistant",
   "displayName": "PRD Assistant",
   "description": "Transform your Product Requirements Documents into interactive, trackable project dashboards.",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "publisher": "fusepilot",
   "author": "Michael Delaney",
   "icon": "images/icon.png",
